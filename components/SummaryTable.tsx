@@ -65,7 +65,9 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ data, onPayableDaysChange, 
             <SortableHeader sortKey="empId">Emp. ID</SortableHeader>
             <SortableHeader sortKey="name">Name</SortableHeader>
             <SortableHeader sortKey="presentDays">Present</SortableHeader>
-            <SortableHeader sortKey="permissions">Permissions</SortableHeader>
+            <SortableHeader sortKey="casualLeavesAvailable">CL Avail.</SortableHeader>
+            <SortableHeader sortKey="casualLeavesUsed">CL Used</SortableHeader>
+            <SortableHeader sortKey="unpaidLeave">Unpaid</SortableHeader>
             <SortableHeader sortKey="totalLeaves">Total Leaves</SortableHeader>
             <SortableHeader sortKey="payableDays">Payable Days</SortableHeader>
             <SortableHeader sortKey="calculatedSalary">Calculated Salary</SortableHeader>
@@ -81,7 +83,9 @@ const SummaryTable: React.FC<SummaryTableProps> = ({ data, onPayableDaysChange, 
                 </button>
               </td>
               <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.presentDays}</td>
-              <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.permissions}</td>
+              <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.casualLeavesAvailable}</td>
+              <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.casualLeavesUsed}</td>
+              <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.unpaidLeave}</td>
               <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.totalLeaves.toFixed(1)}</td>
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">
                 <input

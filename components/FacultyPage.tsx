@@ -18,7 +18,7 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
   const [activeTab, setActiveTab] = useState<'view' | 'add' | 'upload' | 'edit' | 'manual'>('view');
   
   const [newFaculty, setNewFaculty] = useState({
-      empId: '', name: '', dept: '', designation: '', salary: ''
+      empId: '', name: '', dept: '', designation: '', salary: '', casualLeaves: ''
   });
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -39,8 +39,9 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
         dept: newFaculty.dept,
         designation: newFaculty.designation,
         salary: parseFloat(newFaculty.salary),
+        casualLeaves: parseInt(newFaculty.casualLeaves, 10) || 0,
       });
-      setNewFaculty({ empId: '', name: '', dept: '', designation: '', salary: '' }); // Reset form
+      setNewFaculty({ empId: '', name: '', dept: '', designation: '', salary: '', casualLeaves: '' }); // Reset form
     } else {
         alert("Please fill all fields");
     }
@@ -95,6 +96,7 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
             <input type="text" name="dept" value={newFaculty.dept} onChange={handleInputChange} placeholder="Department" required className="w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
             <input type="text" name="designation" value={newFaculty.designation} onChange={handleInputChange} placeholder="Designation" required className="w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
             <input type="number" name="salary" value={newFaculty.salary} onChange={handleInputChange} placeholder="Salary" required className="w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
+            <input type="number" name="casualLeaves" value={newFaculty.casualLeaves} onChange={handleInputChange} placeholder="Casual Leaves" required className="w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
             <button type="submit" disabled={loading} className="w-full bg-highlight text-primary font-bold py-2 px-4 rounded-md hover:bg-teal-300 disabled:bg-gray-500 dark:bg-teal-500 dark:hover:bg-teal-400">
                 {loading ? 'Adding...' : 'Add Faculty'}
             </button>
@@ -103,7 +105,7 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
       case 'upload':
         return (
           <div className="max-w-md mx-auto">
-             <p className="text-sm text-center text-text-secondary dark:text-gray-400 mb-4">Upload an Excel file with columns: empId, name, dept, designation, salary.</p>
+             <p className="text-sm text-center text-text-secondary dark:text-gray-400 mb-4">Upload an Excel file with columns: empId, name, dept, designation, salary, casualLeaves.</p>
              <FacultyFileUpload onFileUpload={handleFileUpload} />
           </div>
         );

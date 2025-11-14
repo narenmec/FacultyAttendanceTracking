@@ -6,7 +6,7 @@ import 'jspdf-autotable';
 import { MonthlySummary } from '../types';
 
 export const generateSummaryPDF = (data: MonthlySummary[], month: string, workingDays: number) => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ orientation: 'landscape' });
   
   // Header
   doc.setFontSize(18);
@@ -21,7 +21,7 @@ export const generateSummaryPDF = (data: MonthlySummary[], month: string, workin
   doc.text(`Total Working Days in Month: ${workingDays}`, 14, 38);
 
   // Table
-  const tableColumn = ["ID", "Name", "Dept", "Designation", "Present", "Perm.", "Leaves", "Payable", "Salary (INR)"];
+  const tableColumn = ["ID", "Name", "Dept", "Present", "CL Avail.", "CL Used", "Unpaid", "Permissions", "Half-Day", "Total Leaves", "Payable", "Salary (INR)"];
   const tableRows: any[][] = [];
 
   const sortedData = [...data].sort((a, b) => {
@@ -39,9 +39,12 @@ export const generateSummaryPDF = (data: MonthlySummary[], month: string, workin
       item.empId,
       item.name,
       item.dept,
-      item.designation,
       item.presentDays,
+      item.casualLeavesAvailable,
+      item.casualLeavesUsed,
+      item.unpaidLeave,
       item.permissions,
+      item.halfDayLeaves,
       item.totalLeaves.toFixed(1),
       item.payableDays.toFixed(1),
       // FIX: The default jsPDF font doesn't support the Rupee symbol (₹).
@@ -68,7 +71,7 @@ export const generateSummaryPDF = (data: MonthlySummary[], month: string, workin
         fontStyle: 'bold',
     },
     styles: {
-        fontSize: 9,
+        fontSize: 8,
         cellPadding: 2,
     },
     alternateRowStyles: {
@@ -78,18 +81,19 @@ export const generateSummaryPDF = (data: MonthlySummary[], month: string, workin
         fontStyle: 'bold',
         fillColor: '#e2e8f0'
     },
-    // Set explicit column widths to prevent text wrapping and improve layout.
-    // The final column ('auto') will take up the remaining space.
     columnStyles: {
-        0: { cellWidth: 10, halign: 'right' },   // Emp. ID
-        1: { cellWidth: 40 },                    // Name
-        2: { cellWidth: 25 },                    // Dept
-        3: { cellWidth: 25 },                    // Designation
-        4: { cellWidth: 15, halign: 'right' },   // Present
-        5: { cellWidth: 15, halign: 'right' },   // Permissions
-        6: { cellWidth: 15, halign: 'right' },   // Leaves
-        7: { cellWidth: 15, halign: 'right' },   // Payable Days
-        8: { cellWidth: 'auto', halign: 'right' }, // Salary (INR)
+        0: { cellWidth: 10, halign: 'right' },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 15, halign: 'right' },
+        4: { cellWidth: 15, halign: 'right' },
+        5: { cellWidth: 15, halign: 'right' },
+        6: { cellWidth: 15, halign: 'right' },
+        7: { cellWidth: 18, halign: 'right' },
+        8: { cellWidth: 18, halign: 'right' },
+        9: { cellWidth: 18, halign: 'right' },
+        10: { cellWidth: 15, halign: 'right' },
+        11: { cellWidth: 'auto', halign: 'right' },
     }
   });
 
@@ -107,4 +111,81 @@ export const generateSummaryPDF = (data: MonthlySummary[], month: string, workin
   }
 
   doc.save(`attendance_summary_${month}.pdf`);
+};
+
+export const generateBriefSummaryPDF = (data: MonthlySummary[], month: string, workingDays: number) => {
+  const doc = new jsPDF({ orientation: 'portrait' });
+  
+  // Header
+  doc.setFontSize(18);
+  doc.setTextColor('#38b2ac');
+  doc.text('Brief Faculty Salary Summary', 14, 22);
+  
+  doc.setFontSize(11);
+  doc.setTextColor('#2d3748');
+  const selectedDate = new Date(`${month}-02`);
+  const monthYear = selectedDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  doc.text(`Report for: ${monthYear}`, 14, 32);
+  doc.text(`Total Working Days in Month: ${workingDays}`, 14, 38);
+
+  // Table
+  const tableColumn = ["S.No", "ID", "Name", "Dept", "Payable Days", "Salary (INR)"];
+  const tableRows: any[][] = [];
+
+  const sortedData = [...data].sort((a, b) => a.name.localeCompare(b.name));
+
+  sortedData.forEach((item, index) => {
+    const rowData = [
+      index + 1,
+      item.empId,
+      item.name,
+      item.dept,
+      item.payableDays.toFixed(1),
+      item.calculatedSalary.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    ];
+    tableRows.push(rowData);
+  });
+
+  (doc as any).autoTable({
+    startY: 50,
+    head: [tableColumn],
+    body: tableRows,
+    theme: 'grid',
+    headStyles: {
+        fillColor: '#38b2ac',
+        textColor: '#ffffff',
+        fontStyle: 'bold',
+    },
+    styles: {
+        fontSize: 9,
+        cellPadding: 2,
+    },
+    alternateRowStyles: {
+        fillColor: '#f7fafc'
+    },
+    columnStyles: {
+        0: { cellWidth: 10, halign: 'right' },
+        1: { cellWidth: 15, halign: 'right' },
+        2: { cellWidth: 60 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 25, halign: 'right' },
+        5: { cellWidth: 'auto', halign: 'right' },
+    }
+  });
+
+  const pageCount = (doc.internal as any).getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor('#718096');
+    const text = `Page ${i} of ${pageCount} | Generated on: ${new Date().toLocaleDateString()}`;
+    const textWidth = doc.getStringUnitWidth(text) * doc.getFontSize() / doc.internal.scaleFactor;
+    const textX = (doc.internal.pageSize.getWidth() - textWidth) / 2;
+    doc.text(text, textX, doc.internal.pageSize.getHeight() - 10);
+  }
+
+  doc.save(`brief_summary_${month}.pdf`);
 };

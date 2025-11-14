@@ -66,6 +66,7 @@ const FacultyTable: React.FC<FacultyTableProps> = ({ data, onFacultySelect, onDe
             <SortableHeader sortKey="name">Name</SortableHeader>
             <SortableHeader sortKey="dept">Department</SortableHeader>
             <SortableHeader sortKey="designation">Designation</SortableHeader>
+            <SortableHeader sortKey="casualLeaves">CL Balance</SortableHeader>
             <SortableHeader sortKey="salary">Salary</SortableHeader>
             <th className="p-3 text-left font-semibold text-text-secondary tracking-wider dark:text-gray-400">Actions</th>
           </tr>
@@ -81,6 +82,7 @@ const FacultyTable: React.FC<FacultyTableProps> = ({ data, onFacultySelect, onDe
               </td>
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">{record.dept}</td>
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">{record.designation}</td>
+              <td className="p-3 text-sm text-center text-text-primary dark:text-gray-300">{record.casualLeaves}</td>
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">{record.salary.toLocaleString()}</td>
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">
                 <button

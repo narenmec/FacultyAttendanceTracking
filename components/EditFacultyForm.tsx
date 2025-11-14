@@ -12,7 +12,7 @@ const EditFacultyForm: React.FC<EditFacultyFormProps> = ({ facultyList, updateFa
   const [searchQuery, setSearchQuery] = useState('');
   const [searchBy, setSearchBy] = useState<'empId' | 'name'>('name');
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyRecord | null>(null);
-  const [editFormState, setEditFormState] = useState<Omit<FacultyRecord, 'empId'>>({ name: '', dept: '', designation: '', salary: 0 });
+  const [editFormState, setEditFormState] = useState<Omit<FacultyRecord, 'empId'>>({ name: '', dept: '', designation: '', salary: 0, casualLeaves: 0 });
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const searchResults = useMemo(() => {
@@ -33,6 +33,7 @@ const EditFacultyForm: React.FC<EditFacultyFormProps> = ({ facultyList, updateFa
       dept: faculty.dept,
       designation: faculty.designation,
       salary: faculty.salary,
+      casualLeaves: faculty.casualLeaves,
     });
     setSearchQuery('');
     setFeedback(null);
@@ -40,7 +41,7 @@ const EditFacultyForm: React.FC<EditFacultyFormProps> = ({ facultyList, updateFa
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const isNumberField = name === 'salary';
+    const isNumberField = name === 'salary' || name === 'casualLeaves';
     setEditFormState(prev => ({ ...prev, [name]: isNumberField ? parseFloat(value) || 0 : value }));
   };
 
@@ -126,6 +127,10 @@ const EditFacultyForm: React.FC<EditFacultyFormProps> = ({ facultyList, updateFa
                 <div>
                     <label className="text-sm font-medium text-text-secondary dark:text-gray-400">Salary</label>
                     <input type="number" name="salary" value={editFormState.salary} onChange={handleInputChange} required className="w-full bg-primary border border-accent rounded-md p-2 mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
+                </div>
+                <div>
+                    <label className="text-sm font-medium text-text-secondary dark:text-gray-400">Casual Leaves</label>
+                    <input type="number" name="casualLeaves" value={editFormState.casualLeaves} onChange={handleInputChange} required className="w-full bg-primary border border-accent rounded-md p-2 mt-1 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200" />
                 </div>
                 <button type="submit" disabled={loading} className="w-full bg-highlight text-primary font-bold py-2 px-4 rounded-md hover:bg-teal-300 disabled:bg-gray-500 dark:bg-teal-500 dark:hover:bg-teal-400">
                     {loading ? 'Saving...' : 'Save Changes'}

@@ -16,6 +16,7 @@ const processRawFacultyData = (jsonData: any[]): FacultyRecord[] => {
       dept: normalizedRow['dept'] || 'N/A',
       designation: normalizedRow['designation'] || 'N/A',
       salary: parseFloat(normalizedRow['salary']) || 0,
+      casualLeaves: parseInt(normalizedRow['casualleaves'], 10) || 0,
     };
   });
 };
@@ -67,7 +68,8 @@ export const useFacultyData = () => {
         name: newFaculty.name,
         dept: newFaculty.dept,
         designation: newFaculty.designation,
-        salary: newFaculty.salary
+        salary: newFaculty.salary,
+        casualLeaves: newFaculty.casualLeaves || 0
       });
       setFacultyList(prev => [...prev, newFaculty].sort((a, b) => a.name.localeCompare(b.name)));
     } catch(err) {

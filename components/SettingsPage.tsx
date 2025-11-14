@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettings } from './SettingsContext';
 import { Settings as SettingsIcon, Save, Loader2 } from 'lucide-react';
+import MonthlyActions from './MonthlyActions';
 
 const SettingsPage: React.FC = () => {
   const { settings, loading, error, updateSettings } = useSettings();
@@ -43,7 +44,7 @@ const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto space-y-8">
       <div className="bg-secondary p-8 rounded-lg shadow-xl dark:bg-gray-800">
         <div className="text-center mb-8">
           <SettingsIcon className="mx-auto h-12 w-12 text-highlight dark:text-teal-300" />
@@ -110,6 +111,8 @@ const SettingsPage: React.FC = () => {
           </div>
         </form>
       </div>
+
+      <MonthlyActions />
     </div>
   );
 };

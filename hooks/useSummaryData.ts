@@ -101,13 +101,21 @@ export const useSummaryData = () => {
 
         const newSummaryData = facultyList.map(faculty => {
             const records = attendanceByEmpId.get(faculty.empId) || [];
+            
+            // Core leave calculation logic
             const presentDays = records.filter(r => r.status !== AttendanceStatus.Absent).length;
-            const lateRecords = records.filter(r => r.status === AttendanceStatus.Late).length;
+            const absentDays = Math.max(0, monthlyWorkingDays - presentDays);
+            const casualLeavesAvailable = faculty.casualLeaves || 0;
+            const casualLeavesUsed = Math.min(absentDays, casualLeavesAvailable);
+            const unpaidLeave = absentDays - casualLeavesUsed;
 
+            // Late record logic for permissions
+            const lateRecords = records.filter(r => r.status === AttendanceStatus.Late).length;
             const permissions = Math.min(lateRecords, settings.permissionLimit);
             const halfDayLeaves = Math.max(0, lateRecords - settings.permissionLimit);
-            const fullDayLeaves = Math.max(0, monthlyWorkingDays - presentDays);
-            const totalLeaves = fullDayLeaves + (0.5 * halfDayLeaves);
+            
+            // Final salary calculation
+            const totalLeaves = unpaidLeave + (0.5 * halfDayLeaves);
             const payableDays = Math.max(0, monthlyWorkingDays - totalLeaves);
             
             const calculatedSalary = faculty.salary > 0 && monthlyWorkingDays > 0
@@ -123,7 +131,9 @@ export const useSummaryData = () => {
                 presentDays,
                 permissions,
                 halfDayLeaves,
-                fullDayLeaves,
+                casualLeavesAvailable,
+                casualLeavesUsed,
+                unpaidLeave,
                 totalLeaves,
                 payableDays,
                 calculatedSalary: parseFloat(calculatedSalary.toFixed(2)),
@@ -157,6 +167,41 @@ export const useSummaryData = () => {
             });
         });
     }, [monthlyWorkingDays, facultyList]);
+
+    const finalizeAndDeductCLs = async () => {
+        if (summaryData.length === 0) {
+            throw new Error("No summary data to process.");
+        }
+        
+        const updates: { [key: string]: number } = {};
+        let deductionsMade = 0;
+
+        summaryData.forEach(summaryItem => {
+            if (summaryItem.casualLeavesUsed > 0) {
+                const newBalance = summaryItem.casualLeavesAvailable - summaryItem.casualLeavesUsed;
+                updates[`/faculty/${summaryItem.empId}/casualLeaves`] = newBalance;
+                deductionsMade++;
+            }
+        });
+
+        if (deductionsMade === 0) {
+            return "No CL deductions were needed for this month.";
+        }
+
+        await db.ref().update(updates);
+
+        // Refresh local faculty list to reflect new balances
+        const updatedFacultyList = facultyList.map(f => {
+            const summary = summaryData.find(s => s.empId === f.empId);
+            if (summary && summary.casualLeavesUsed > 0) {
+                return { ...f, casualLeaves: f.casualLeaves - summary.casualLeavesUsed };
+            }
+            return f;
+        });
+        setFacultyList(updatedFacultyList);
+        
+        return `Successfully finalized month. CL deductions applied to ${deductionsMade} faculty members.`;
+    };
     
     return {
         summaryData,
@@ -169,5 +214,6 @@ export const useSummaryData = () => {
         setMonthlyWorkingDays,
         recalculate: calculateSummary,
         updatePayableDays,
+        finalizeAndDeductCLs,
     };
 };

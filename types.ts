@@ -21,6 +21,7 @@ export interface FacultyRecord {
   dept: string;
   designation: string;
   salary: number;
+  casualLeaves: number;
 }
 
 export interface ChartData {
@@ -56,7 +57,9 @@ export interface MonthlySummary {
   presentDays: number;
   permissions: number;
   halfDayLeaves: number;
-  fullDayLeaves: number;
+  casualLeavesAvailable: number;
+  casualLeavesUsed: number;
+  unpaidLeave: number;
   totalLeaves: number;
   payableDays: number;
   calculatedSalary: number;

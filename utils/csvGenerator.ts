@@ -6,7 +6,8 @@ export const generateSummaryCSV = (data: MonthlySummary[], month: string) => {
   const tableHeader = [
     "Employee ID", "Name", "Department", "Designation",
     "Monthly Salary", "Present Days", "Permissions", "Half-Day Leaves",
-    "Full-Day Leaves", "Total Leaves", "Payable Days", "Calculated Salary"
+    "Casual Leaves Available", "Casual Leaves Used", "Unpaid Leave",
+    "Total Leaves", "Payable Days", "Calculated Salary"
   ];
 
   const sortedData = [...data].sort((a, b) => a.name.localeCompare(b.name));
@@ -20,7 +21,9 @@ export const generateSummaryCSV = (data: MonthlySummary[], month: string) => {
     "Present Days": item.presentDays,
     "Permissions": item.permissions,
     "Half-Day Leaves": item.halfDayLeaves,
-    "Full-Day Leaves": item.fullDayLeaves,
+    "Casual Leaves Available": item.casualLeavesAvailable,
+    "Casual Leaves Used": item.casualLeavesUsed,
+    "Unpaid Leave": item.unpaidLeave,
     "Total Leaves": item.totalLeaves.toFixed(1),
     "Payable Days": item.payableDays.toFixed(1),
     "Calculated Salary": item.calculatedSalary
