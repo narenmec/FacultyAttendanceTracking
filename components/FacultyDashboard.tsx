@@ -1,8 +1,9 @@
+
 import React from 'react';
-import { useFacultyDetailData } from '../hooks/useFacultyDetailData';
+import { useFacultyDetailData } from '../hooks/useFacultyDetailData.ts';
 import { Loader2, User, Building, Briefcase, Clock, AlertTriangle, UserX, ClipboardCheck, CalendarCheck } from 'lucide-react';
-import CalendarView from './CalendarView';
-import LeaveManagement from './LeaveManagement';
+import CalendarView from './CalendarView.tsx';
+import LeaveManagement from './LeaveManagement.tsx';
 
 interface FacultyDashboardProps {
   empId: number;

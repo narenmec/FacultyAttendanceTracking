@@ -1,13 +1,12 @@
 
-
 import React, { useState } from 'react';
-import { useFacultyData } from '../hooks/useFacultyData';
-import FacultyTable from './FacultyTable';
-import FacultyFileUpload from './FacultyFileUpload';
-import EditFacultyForm from './EditFacultyForm';
-import ManualAttendance from './ManualAttendance';
+import { useFacultyData } from '../hooks/useFacultyData.ts';
+import FacultyTable from './FacultyTable.tsx';
+import FacultyFileUpload from './FacultyFileUpload.tsx';
+import EditFacultyForm from './EditFacultyForm.tsx';
+import ManualAttendance from './ManualAttendance.tsx';
 import { UserPlus, UploadCloud, Edit, List, ClipboardCheck, AlertTriangle } from 'lucide-react';
-import { FacultyRecord } from '../types';
+import { FacultyRecord } from '../types.ts';
 
 interface FacultyPageProps {
   theme: 'light' | 'dark';

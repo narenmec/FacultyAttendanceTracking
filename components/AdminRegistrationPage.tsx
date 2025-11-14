@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
-import { db } from '../firebase/config';
+import { db } from '../firebase/config.ts';
 import { UserPlus, Loader2, KeyRound, ArrowLeft } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from './ThemeToggle.tsx';
 
 interface AdminRegistrationPageProps {
   onRegistrationRequestSuccess: () => void;

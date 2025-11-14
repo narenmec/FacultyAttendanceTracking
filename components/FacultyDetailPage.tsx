@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
-import { useFacultyDetailData } from '../hooks/useFacultyDetailData';
+import { useFacultyDetailData } from '../hooks/useFacultyDetailData.ts';
 import { ArrowLeft, Loader2, User, Briefcase, Building, Clock, AlertTriangle, UserX, ClipboardCheck, Calendar as CalendarIcon, CalendarCheck, FileText, ChevronRight, X, FileDown, Trash2, CheckCircle, XCircle } from 'lucide-react';
-import CalendarView from './CalendarView';
-import { AttendanceRecord, AttendanceStatus, LeaveApplicationRecord, LeaveStatus } from '../types';
-import LeaveManagement from './LeaveManagement';
-import { generateLeaveApplicationPDF, LeaveApplicationDetails } from '../utils/pdfGenerator';
+import CalendarView from './CalendarView.tsx';
+import { AttendanceRecord, AttendanceStatus, LeaveApplicationRecord, LeaveStatus } from '../types.ts';
+import LeaveManagement from './LeaveManagement.tsx';
+import { generateLeaveApplicationPDF, LeaveApplicationDetails } from '../utils/pdfGenerator.ts';
 
 interface FacultyDetailPageProps {
   empId: number;

@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase/config';
-import { FacultyRecord } from '../types';
+import { db } from '../firebase/config.ts';
+import { FacultyRecord } from '../types.ts';
 
 interface UserAccount {
   username: string;

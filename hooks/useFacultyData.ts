@@ -1,7 +1,8 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { db } from '../firebase/config';
-import { FacultyRecord } from '../types';
+import { db } from '../firebase/config.ts';
+import { FacultyRecord } from '../types.ts';
 
 const processRawFacultyData = (jsonData: any[]): FacultyRecord[] => {
   return jsonData.map((row, index) => {

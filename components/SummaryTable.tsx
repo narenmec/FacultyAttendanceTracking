@@ -1,7 +1,6 @@
 
-
 import React, { useState, useMemo } from 'react';
-import { MonthlySummary } from '../types';
+import { MonthlySummary } from '../types.ts';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface SummaryTableProps {

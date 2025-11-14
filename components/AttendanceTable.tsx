@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { AttendanceRecord, AttendanceStatus } from '../types';
+import { AttendanceRecord, AttendanceStatus } from '../types.ts';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface AttendanceTableProps {

@@ -1,6 +1,7 @@
+
 import { useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase/config';
-import { Holiday } from '../types';
+import { db } from '../firebase/config.ts';
+import { Holiday } from '../types.ts';
 
 export const useHolidays = () => {
   const [holidays, setHolidays] = useState<Holiday[]>([]);

@@ -1,6 +1,7 @@
+
 import React, { createContext, useState, useEffect, useCallback, ReactNode, useContext } from 'react';
-import { db } from '../firebase/config';
-import { Settings } from '../types';
+import { db } from '../firebase/config.ts';
+import { Settings } from '../types.ts';
 
 interface SettingsContextType {
   settings: Settings;

@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { db } from '../firebase/config';
-import { FacultyRecord } from '../types';
+import { db } from '../firebase/config.ts';
+import { FacultyRecord } from '../types.ts';
 import { UserPlus, Search, Loader2, KeyRound, ArrowLeft, User } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import ThemeToggle from './ThemeToggle.tsx';
 
 interface FacultyRegistrationPageProps {
   onRegistrationSuccess: () => void;

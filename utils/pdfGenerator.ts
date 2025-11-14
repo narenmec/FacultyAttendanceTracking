@@ -1,9 +1,10 @@
+
 // FIX: Changed to a default import for jsPDF. The 'jspdf-autotable' plugin
 // augments the default export, and the previous named import ('{ jsPDF }') did not have
 // the correct type information for the plugin, causing errors with 'autoTable' and 'internal.getNumberOfPages'.
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { MonthlySummary, FacultyRecord } from '../types';
+import { MonthlySummary, FacultyRecord } from '../types.ts';
 
 export const generateSummaryPDF = (data: MonthlySummary[], month: string, workingDays: number) => {
   const doc = new jsPDF({ orientation: 'landscape' });

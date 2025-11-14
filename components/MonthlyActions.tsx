@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase/config';
-import { FacultyRecord, AttendanceStatus } from '../types';
+import { db } from '../firebase/config.ts';
+import { FacultyRecord, AttendanceStatus } from '../types.ts';
 import { Calendar, Gift, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const getPreviousMonth = (): string => {

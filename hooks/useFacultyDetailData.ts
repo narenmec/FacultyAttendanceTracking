@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { db } from '../firebase/config';
-import { AttendanceRecord, FacultyRecord, AttendanceStatus, LeaveApplicationRecord } from '../types';
+import { db } from '../firebase/config.ts';
+import { AttendanceRecord, FacultyRecord, AttendanceStatus, LeaveApplicationRecord } from '../types.ts';
 
 export const useFacultyDetailData = (empId: number) => {
     const [faculty, setFaculty] = useState<FacultyRecord | null>(null);

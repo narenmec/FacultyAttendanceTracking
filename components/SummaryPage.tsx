@@ -1,10 +1,9 @@
 
-
 import React, { useState, useMemo } from 'react';
-import { useSummaryData } from '../hooks/useSummaryData';
-import SummaryTable from './SummaryTable';
-import { generateSummaryPDF, generateBriefSummaryPDF } from '../utils/pdfGenerator';
-import { generateSummaryCSV } from '../utils/csvGenerator';
+import { useSummaryData } from '../hooks/useSummaryData.ts';
+import SummaryTable from './SummaryTable.tsx';
+import { generateSummaryPDF, generateBriefSummaryPDF } from '../utils/pdfGenerator.ts';
+import { generateSummaryCSV } from '../utils/csvGenerator.ts';
 import { FileDown, Calendar, Briefcase, FileSpreadsheet, AlertTriangle, CheckCircle, FileText, Loader2 } from 'lucide-react';
 
 interface SummaryPageProps {

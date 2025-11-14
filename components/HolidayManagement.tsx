@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { useHolidays } from '../hooks/useHolidays';
-import { Holiday } from '../types';
+import { useHolidays } from '../hooks/useHolidays.ts';
+import { Holiday } from '../types.ts';
 import { Loader2, Plus, Calendar, Edit2, Trash2, X, AlertTriangle } from 'lucide-react';
 
 const HolidayManagement: React.FC = () => {

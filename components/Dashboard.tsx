@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useAttendanceData } from '../hooks/useAttendanceData';
-import StatCards from './StatCards';
-import AttendancePieChart from './AttendancePieChart';
-import DepartmentBarChart from './DepartmentBarChart';
-import AttendanceTable from './AttendanceTable';
-import Filters from './Filters';
-import FacultySummaryTable from './FacultySummaryTable';
-import FirebaseWarning from './FirebaseWarning';
+import { useAttendanceData } from '../hooks/useAttendanceData.ts';
+import StatCards from './StatCards.tsx';
+import AttendancePieChart from './AttendancePieChart.tsx';
+import DepartmentBarChart from './DepartmentBarChart.tsx';
+import AttendanceTable from './AttendanceTable.tsx';
+import Filters from './Filters.tsx';
+import FacultySummaryTable from './FacultySummaryTable.tsx';
+import FirebaseWarning from './FirebaseWarning.tsx';
 import { Database } from 'lucide-react';
 
 type DashboardProps = ReturnType<typeof useAttendanceData> & { 

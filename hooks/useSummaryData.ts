@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { db } from '../firebase/config';
-import { AttendanceRecord, FacultyRecord, MonthlySummary, AttendanceStatus, Holiday } from '../types';
-import { useSettings } from '../components/SettingsContext';
+import { db } from '../firebase/config.ts';
+import { AttendanceRecord, FacultyRecord, MonthlySummary, AttendanceStatus, Holiday } from '../types.ts';
+import { useSettings } from '../components/SettingsContext.tsx';
 
 export const useSummaryData = () => {
     const { settings } = useSettings();

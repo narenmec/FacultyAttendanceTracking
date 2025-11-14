@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { DepartmentChartData, AttendanceStatus } from '../types';
+import { DepartmentChartData, AttendanceStatus } from '../types.ts';
 
 interface DepartmentBarChartProps {
   data: DepartmentChartData[];
