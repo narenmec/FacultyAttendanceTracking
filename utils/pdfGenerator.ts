@@ -3,7 +3,7 @@
 // the correct type information for the plugin, causing errors with 'autoTable' and 'internal.getNumberOfPages'.
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { MonthlySummary } from '../types';
+import { MonthlySummary, FacultyRecord } from '../types';
 
 export const generateSummaryPDF = (data: MonthlySummary[], month: string, workingDays: number) => {
   const doc = new jsPDF({ orientation: 'landscape' });
@@ -188,4 +188,63 @@ export const generateBriefSummaryPDF = (data: MonthlySummary[], month: string, w
   }
 
   doc.save(`brief_summary_${month}.pdf`);
+};
+
+export interface LeaveApplicationDetails {
+    faculty: FacultyRecord;
+    startDate: string;
+    endDate: string;
+    reason: string;
+    leaveType: string;
+    applicationId: string;
+    submissionTimestamp: Date;
+}
+
+export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.setTextColor('#38b2ac');
+    doc.text('Leave Application', 105, 20, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setTextColor('#2d3748');
+    
+    doc.text(`Submission Date: ${details.submissionTimestamp.toLocaleDateString()}`, 150, 30, { align: 'right' });
+    doc.setFontSize(9);
+    doc.setTextColor('#718096');
+    doc.text(`Application ID: ${details.applicationId}`, 150, 35, { align: 'right' });
+    doc.setFontSize(11);
+    doc.setTextColor('#2d3748');
+
+    doc.text('To,', 20, 45);
+    doc.text('The Principal,', 20, 51);
+    doc.text('[Your Institution Name],', 20, 57);
+    doc.text('[Your Institution Address]', 20, 63);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Subject: Application for ${details.leaveType}`, 20, 75);
+    doc.setFont('helvetica', 'normal');
+
+    doc.text('Respected Sir/Madam,', 20, 85);
+
+    const body = `I, ${details.faculty.name}, ${details.faculty.designation} in the Department of ${details.faculty.dept} (Emp. ID: ${details.faculty.empId}), am writing to formally request a leave of absence.
+
+I would like to apply for ${details.leaveType} from ${details.startDate} to ${details.endDate}.
+
+The reason for my leave is as follows:
+${details.reason}
+
+I have made the necessary arrangements for my duties and responsibilities to be covered during my absence to ensure that work is not disrupted.
+
+I kindly request your approval for this leave. Thank you for your consideration.`;
+
+    doc.text(body, 20, 95, { maxWidth: 170 });
+    
+    doc.text('Sincerely,', 20, 165);
+    
+    doc.text(details.faculty.name, 20, 180);
+    doc.text(`(${details.faculty.designation})`, 20, 186);
+
+    doc.save(`leave_application_${details.faculty.empId}_${details.startDate}.pdf`);
 };

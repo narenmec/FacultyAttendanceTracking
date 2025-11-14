@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Dashboard from './components/Dashboard';
 import UploadPage from './components/UploadPage';
@@ -8,16 +7,27 @@ import SettingsPage from './components/SettingsPage';
 import FacultyDetailPage from './components/FacultyDetailPage';
 import LoginPage from './components/LoginPage';
 import UserManagementPage from './components/UserManagementPage';
+import FacultyRegistrationPage from './components/FacultyRegistrationPage';
+import AdminRegistrationPage from './components/AdminRegistrationPage';
+import FacultyDashboard from './components/FacultyDashboard';
+import LeaveApprovalPage from './components/LeaveApprovalPage';
 import { useAttendanceData } from './hooks/useAttendanceData';
-import { LayoutDashboard, Upload, Users, Sheet, Settings as SettingsIcon, LogOut, UserCog } from 'lucide-react';
+import { LayoutDashboard, Upload, Users, Sheet, Settings as SettingsIcon, LogOut, UserCog, CalendarCheck } from 'lucide-react';
 import ThemeToggle from './components/ThemeToggle';
 
+type User = {
+    username: string;
+    role: 'admin' | 'faculty';
+    empId?: number;
+};
+
 const App: React.FC = () => {
-  const [page, setPage] = useState<'dashboard' | 'upload' | 'faculty' | 'summary' | 'settings' | 'facultyDetail' | 'userManagement'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'upload' | 'faculty' | 'summary' | 'settings' | 'facultyDetail' | 'userManagement' | 'facultyRegistration' | 'facultyDashboard' | 'leaveApprovals' | 'adminRegistration'>('dashboard');
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
   const [previousPage, setPreviousPage] = useState<'dashboard' | 'faculty' | 'summary'>('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loginSuccessMessage, setLoginSuccessMessage] = useState('');
   
   const [theme, setTheme] = useState<'light' | 'dark'>(
     () => (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
@@ -25,12 +35,14 @@ const App: React.FC = () => {
   const attendanceData = useAttendanceData();
 
   useEffect(() => {
-    // Check session storage on initial load
     const loggedIn = sessionStorage.getItem('isAuthenticated');
-    const user = sessionStorage.getItem('currentUser');
-    if (loggedIn === 'true' && user) {
+    const userJson = sessionStorage.getItem('currentUser');
+    if (loggedIn === 'true' && userJson) {
+      const user: User = JSON.parse(userJson);
       setIsAuthenticated(true);
       setCurrentUser(user);
+      // On refresh, direct user to appropriate dashboard
+      setPage(user.role === 'faculty' ? 'facultyDashboard' : 'dashboard');
     }
   }, []);
 
@@ -44,11 +56,12 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const handleLoginSuccess = (username: string) => {
+  const handleLoginSuccess = (user: User) => {
     sessionStorage.setItem('isAuthenticated', 'true');
-    sessionStorage.setItem('currentUser', username);
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
     setIsAuthenticated(true);
-    setCurrentUser(username);
+    setCurrentUser(user);
+    setPage(user.role === 'faculty' ? 'facultyDashboard' : 'dashboard');
   };
 
   const handleLogout = () => {
@@ -56,7 +69,7 @@ const App: React.FC = () => {
     sessionStorage.removeItem('currentUser');
     setIsAuthenticated(false);
     setCurrentUser(null);
-    setPage('dashboard'); // Reset to default page on logout
+    setPage('dashboard');
   };
 
   const handleThemeToggle = () => {
@@ -74,6 +87,16 @@ const App: React.FC = () => {
   const handleBack = () => {
     setSelectedEmpId(null);
     setPage(previousPage);
+  };
+  
+  const handleRegistrationSuccess = () => {
+    setLoginSuccessMessage('Account created successfully. Please log in.');
+    setPage('dashboard');
+  };
+
+  const handleAdminRegistrationRequestSuccess = () => {
+    setLoginSuccessMessage('Your account request has been submitted for approval.');
+    setPage('dashboard');
   };
 
   const NavButton: React.FC<{
@@ -94,6 +117,14 @@ const App: React.FC = () => {
   );
   
   const renderPage = () => {
+    if (currentUser?.role === 'faculty') {
+        if (currentUser.empId) {
+            return <FacultyDashboard empId={currentUser.empId} theme={theme} />;
+        }
+        return <div>Error: Faculty user is not linked to an employee ID.</div>
+    }
+
+    // Admin pages
     switch(page) {
       case 'dashboard':
         return <Dashboard {...attendanceData} theme={theme} onFacultySelect={handleFacultySelect} />;
@@ -110,6 +141,8 @@ const App: React.FC = () => {
         return <SummaryPage onFacultySelect={handleFacultySelect} />;
       case 'settings':
         return <SettingsPage />;
+      case 'leaveApprovals':
+        return <LeaveApprovalPage />;
       case 'facultyDetail':
         return selectedEmpId ? <FacultyDetailPage empId={selectedEmpId} onBack={handleBack} theme={theme} /> : <Dashboard {...attendanceData} theme={theme} onFacultySelect={handleFacultySelect} />;
       case 'userManagement':
@@ -120,50 +153,67 @@ const App: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage onLoginSuccess={handleLoginSuccess} theme={theme} onThemeToggle={handleThemeToggle} />;
+    if (page === 'facultyRegistration') {
+        return <FacultyRegistrationPage onRegistrationSuccess={handleRegistrationSuccess} onBackToLogin={() => setPage('dashboard')} theme={theme} onThemeToggle={handleThemeToggle} />;
+    }
+    if (page === 'adminRegistration') {
+        return <AdminRegistrationPage onRegistrationRequestSuccess={handleAdminRegistrationRequestSuccess} onBackToLogin={() => setPage('dashboard')} theme={theme} onThemeToggle={handleThemeToggle} />;
+    }
+    return <LoginPage onLoginSuccess={handleLoginSuccess} onGoToRegister={() => setPage('facultyRegistration')} onGoToAdminRegister={() => setPage('adminRegistration')} successMessage={loginSuccessMessage} theme={theme} onThemeToggle={handleThemeToggle} />;
   }
 
   return (
     <div className="min-h-screen bg-primary font-sans dark:bg-gray-900">
       <header className="bg-secondary p-4 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 dark:bg-gray-800 dark:border-b dark:border-gray-700">
         <h1 className="text-xl md:text-2xl font-bold text-highlight text-center sm:text-left dark:text-teal-300">
-          Faculty Attendance
+          ACT HR Management
         </h1>
         <nav className="flex items-center gap-2 flex-wrap justify-center">
-          <NavButton active={page === 'dashboard'} onClick={() => setPage('dashboard')}>
-            <LayoutDashboard size={16} />
-            Dashboard
-          </NavButton>
-          <NavButton active={page === 'upload'} onClick={() => setPage('upload')}>
-            <Upload size={16} />
-            Upload Data
-          </NavButton>
-          <NavButton active={page === 'faculty'} onClick={() => setPage('faculty')}>
-            <Users size={16} />
-            Faculty
-          </NavButton>
-          <NavButton active={page === 'summary'} onClick={() => setPage('summary')}>
-            <Sheet size={16} />
-            Summary
-          </NavButton>
-          <NavButton active={page === 'settings'} onClick={() => setPage('settings')}>
-            <SettingsIcon size={16} />
-            Settings
-          </NavButton>
-          {currentUser === 'admin' && (
-             <NavButton active={page === 'userManagement'} onClick={() => setPage('userManagement')}>
-                <UserCog size={16} />
-                User Management
-             </NavButton>
-          )}
-          <ThemeToggle theme={theme} onToggle={handleThemeToggle} />
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900"
-          >
-            <LogOut size={16} />
-            Logout
-          </button>
+            {currentUser?.role === 'admin' ? (
+                <>
+                    <NavButton active={page === 'dashboard'} onClick={() => setPage('dashboard')}>
+                        <LayoutDashboard size={16} />
+                        Dashboard
+                    </NavButton>
+                    <NavButton active={page === 'upload'} onClick={() => setPage('upload')}>
+                        <Upload size={16} />
+                        Upload Data
+                    </NavButton>
+                    <NavButton active={page === 'faculty'} onClick={() => setPage('faculty')}>
+                        <Users size={16} />
+                        Faculty
+                    </NavButton>
+                    <NavButton active={page === 'summary'} onClick={() => setPage('summary')}>
+                        <Sheet size={16} />
+                        Summary
+                    </NavButton>
+                    <NavButton active={page === 'leaveApprovals'} onClick={() => setPage('leaveApprovals')}>
+                        <CalendarCheck size={16} />
+                        Leave Requests
+                    </NavButton>
+                    <NavButton active={page === 'settings'} onClick={() => setPage('settings')}>
+                        <SettingsIcon size={16} />
+                        Settings
+                    </NavButton>
+                    <NavButton active={page === 'userManagement'} onClick={() => setPage('userManagement')}>
+                        <UserCog size={16} />
+                        User Management
+                    </NavButton>
+                </>
+            ) : (
+                <NavButton active={page === 'facultyDashboard'} onClick={() => setPage('facultyDashboard')}>
+                    <LayoutDashboard size={16} />
+                    My Dashboard
+                </NavButton>
+            )}
+            <ThemeToggle theme={theme} onToggle={handleThemeToggle} />
+            <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900"
+            >
+                <LogOut size={16} />
+                Logout
+            </button>
         </nav>
       </header>
       <main className="p-4 md:p-8">

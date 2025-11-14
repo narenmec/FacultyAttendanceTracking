@@ -13,6 +13,7 @@ export interface AttendanceRecord {
   inTime: string;
   status: AttendanceStatus;
   date: string;
+  leaveApplicationId?: string;
 }
 
 export interface FacultyRecord {
@@ -22,7 +23,26 @@ export interface FacultyRecord {
   designation: string;
   salary: number;
   casualLeaves: number;
+  username?: string;
+  password?: string; // Stored as base64
+  registered?: boolean;
 }
+
+export type LeaveStatus = 'Pending' | 'Approved' | 'Rejected';
+
+export interface LeaveApplicationRecord {
+  id: string;
+  empId: number;
+  name: string;
+  dept: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  leaveType: string;
+  status: LeaveStatus;
+  submissionTimestamp: string;
+}
+
 
 export interface ChartData {
   name: string;
@@ -59,6 +79,7 @@ export interface MonthlySummary {
   halfDayLeaves: number;
   casualLeavesAvailable: number;
   casualLeavesUsed: number;
+
   unpaidLeave: number;
   totalLeaves: number;
   payableDays: number;
@@ -69,6 +90,7 @@ export interface Settings {
   onTimeThreshold: string;
   permissionLimit: number;
   accountCreationEnabled: boolean;
+  userAccountRequestEnabled: boolean;
 }
 
 export interface Holiday {

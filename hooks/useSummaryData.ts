@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
 import { AttendanceRecord, FacultyRecord, MonthlySummary, AttendanceStatus, Holiday } from '../types';
@@ -97,6 +98,7 @@ export const useSummaryData = () => {
                                     date,
                                     inTime: record.inTime,
                                     status: record.status,
+                                    leaveApplicationId: record.leaveApplicationId,
                                 });
                             }
                         }

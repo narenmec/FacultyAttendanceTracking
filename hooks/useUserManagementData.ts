@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { db } from '../firebase/config';
+import { FacultyRecord } from '../types';
 
 interface UserAccount {
   username: string;
@@ -9,6 +10,7 @@ interface UserAccount {
 export const useUserManagementData = () => {
   const [pendingUsers, setPendingUsers] = useState<UserAccount[]>([]);
   const [existingUsers, setExistingUsers] = useState<UserAccount[]>([]);
+  const [registeredFaculty, setRegisteredFaculty] = useState<FacultyRecord[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -18,10 +20,12 @@ export const useUserManagementData = () => {
     setError(null);
     try {
       const pendingRef = db.ref('pendingUsers');
+      const facultyRef = db.ref('faculty');
       const usersRef = db.ref('users');
 
-      const [pendingSnapshot, usersSnapshot] = await Promise.all([
+      const [pendingSnapshot, facultySnapshot, usersSnapshot] = await Promise.all([
         pendingRef.get(),
+        facultyRef.get(),
         usersRef.get(),
       ]);
 
@@ -33,14 +37,32 @@ export const useUserManagementData = () => {
         setPendingUsers([]);
       }
       
-      if (usersSnapshot.exists()) {
-        const dataFromDb = usersSnapshot.val();
-        const loadedUsers: UserAccount[] = Object.values(dataFromDb);
-        // Don't include admin in the list of users whose passwords can be changed
-        setExistingUsers(loadedUsers.filter(u => u.username !== 'admin'));
-      } else {
-        setExistingUsers([]);
+      const combinedExistingUsers: UserAccount[] = [];
+      const regFaculty: FacultyRecord[] = [];
+
+      if (facultySnapshot.exists()) {
+        const facultyData = facultySnapshot.val();
+        Object.keys(facultyData).forEach(empId => {
+            const faculty = { empId: parseInt(empId), ...facultyData[empId] };
+            if (faculty.registered && faculty.username) {
+                combinedExistingUsers.push({ username: faculty.username });
+                regFaculty.push(faculty);
+            }
+        });
+        setRegisteredFaculty(regFaculty.sort((a,b) => a.name.localeCompare(b.name)));
       }
+      
+      if (usersSnapshot.exists()) {
+          const usersData = usersSnapshot.val();
+          const generalUsers: UserAccount[] = Object.values(usersData)
+              .filter((user: any) => user && user.username)
+              .map((user: any) => ({
+                  username: user.username,
+              }));
+          combinedExistingUsers.push(...generalUsers);
+      }
+
+      setExistingUsers(combinedExistingUsers);
 
     } catch (err) {
       console.error('Error fetching users from Firebase: ', err);
@@ -95,24 +117,58 @@ export const useUserManagementData = () => {
   const changeUserPassword = useCallback(async (username: string, newPassword: string, oldPassword?: string) => {
     setError(null);
     try {
+        // First, check if it's a general user (e.g., admin, dean)
         const userRef = db.ref(`users/${username}`);
-        // If oldPassword is provided, we need to verify it first.
-        if (oldPassword) {
-            const userSnapshot = await userRef.get();
-            if (userSnapshot.exists()) {
-                const userData = userSnapshot.val();
-                if (userData.password && atob(userData.password) === oldPassword) {
-                    // Old password matches, proceed to update.
-                    await userRef.child('password').set(btoa(newPassword));
+        const userSnapshot = await userRef.get();
+
+        if (userSnapshot.exists()) {
+             if (oldPassword) {
+                if (userSnapshot.val().password && atob(userSnapshot.val().password) === oldPassword) {
+                    await userRef.update({ password: btoa(newPassword) });
                 } else {
                     throw new Error("The old password does not match.");
                 }
             } else {
-                throw new Error("User not found.");
+                // Admin is forcing a password reset, no old password check needed.
+                await userRef.update({ password: btoa(newPassword) });
             }
         } else {
-            // No oldPassword, so it's a force reset.
-            await userRef.child('password').set(btoa(newPassword));
+            // If not a general user, check faculty
+            const facultyRef = db.ref('faculty');
+            const facultySnapshot = await facultyRef.get();
+            
+            if (!facultySnapshot.exists()) {
+                throw new Error("No faculty data found.");
+            }
+
+            const facultyData = facultySnapshot.val();
+            let empId: string | null = null;
+            let facultyDetails: FacultyRecord | null = null;
+
+            for (const id in facultyData) {
+                if (facultyData[id].username === username) {
+                    empId = id;
+                    facultyDetails = facultyData[id];
+                    break;
+                }
+            }
+
+            if (!empId || !facultyDetails) {
+                throw new Error(`User '${username}' not found.`);
+            }
+
+            const facultyUpdateRef = db.ref(`faculty/${empId}`);
+
+            if (oldPassword) {
+                if (facultyDetails.password && atob(facultyDetails.password) === oldPassword) {
+                    await facultyUpdateRef.update({ password: btoa(newPassword) });
+                } else {
+                    throw new Error("The old password does not match.");
+                }
+            } else {
+                // Admin is forcing a password reset, no old password check needed.
+                await facultyUpdateRef.update({ password: btoa(newPassword) });
+            }
         }
     } catch (err) {
         console.error('Error changing password:', err);
@@ -121,16 +177,37 @@ export const useUserManagementData = () => {
         throw new Error(message);
     }
   }, []);
+  
+  const resetFacultyAccount = useCallback(async (empId: number) => {
+    setError(null);
+    try {
+        const facultyRef = db.ref(`faculty/${empId}`);
+        await facultyRef.update({
+            username: null,
+            password: null,
+            registered: null,
+        });
+        // After reset, refresh all user data to update the UI correctly
+        await fetchUsers();
+    } catch(err) {
+        console.error("Error resetting faculty account:", err);
+        const message = "Failed to reset faculty account. Please try again.";
+        setError(message);
+        throw new Error(message);
+    }
+  }, [fetchUsers]);
 
 
   return {
     pendingUsers,
     existingUsers,
+    registeredFaculty,
     error,
     loading,
     approveUser,
     rejectUser,
     changeUserPassword,
+    resetFacultyAccount,
     refresh: fetchUsers,
     clearError: () => setError(null),
   };

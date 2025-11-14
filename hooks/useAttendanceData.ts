@@ -1,3 +1,4 @@
+
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { db } from '../firebase/config';
@@ -102,6 +103,7 @@ export const useAttendanceData = () => {
                                 date,
                                 inTime: record.inTime,
                                 status: record.status,
+                                leaveApplicationId: record.leaveApplicationId,
                             });
                         }
                     }

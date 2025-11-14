@@ -1,22 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import { KeyRound, Loader2, AlertTriangle, Info, UserPlus, CheckCircle } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import { FacultyRecord } from '../types';
 import { useSettings } from './SettingsContext';
 
 interface LoginPageProps {
-  onLoginSuccess: (username: string) => void;
+  onLoginSuccess: (user: { username: string; role: 'admin' | 'faculty'; empId?: number }) => void;
+  onGoToRegister: () => void;
+  onGoToAdminRegister: () => void;
+  successMessage?: string;
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, theme, onThemeToggle }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, onGoToAdminRegister, successMessage, theme, onThemeToggle }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [creationSuccess, setCreationSuccess] = useState(false);
-  const { settings, loading: settingsLoading } = useSettings();
+  const [allFaculty, setAllFaculty] = useState<FacultyRecord[]>([]);
+  const { settings } = useSettings();
+
+  useEffect(() => {
+    // Fetch all faculty records once on component mount for login check
+    const fetchFaculty = async () => {
+        setLoading(true);
+        try {
+            const facultyRef = db.ref('faculty');
+            const snapshot = await facultyRef.get();
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const list: FacultyRecord[] = Object.keys(data).map(empId => ({
+                    empId: parseInt(empId),
+                    ...data[empId]
+                }));
+                setAllFaculty(list);
+            }
+        } catch (err) {
+            console.error("Error fetching faculty for login:", err);
+            setError("Could not connect to the database to verify users.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchFaculty();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,77 +56,42 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, theme, onThemeTog
 
     setLoading(true);
     setError(null);
-    setCreationSuccess(false);
 
     try {
       const cleanUsername = username.trim();
+      
+      // 1. Check for any approved general user (admin, dean, etc.)
       const userRef = db.ref(`users/${cleanUsername}`);
       const userSnapshot = await userRef.get();
-
-      if (userSnapshot.exists()) {
-        const userData = userSnapshot.val();
-        // The database stores passwords as base64, so we need to decode it first.
-        if (userData.password && atob(userData.password) === password) {
-          onLoginSuccess(cleanUsername);
-        } else {
-          setError('Invalid username or password.');
-        }
-      } else {
-        // If not in users, check pending
-        const pendingRef = db.ref(`pendingUsers/${cleanUsername}`);
-        const pendingSnapshot = await pendingRef.get();
-        if (pendingSnapshot.exists()) {
-          setError("Your account is pending approval by an administrator.");
-        } else {
-          setError('Invalid username or password.');
-        }
+      if (userSnapshot.exists() && userSnapshot.val().password) {
+          if (atob(userSnapshot.val().password) === password) {
+              onLoginSuccess({ username: cleanUsername, role: 'admin' });
+              return;
+          }
       }
+
+      // 2. Check for Faculty
+      const facultyUser = allFaculty.find(f => f.username === cleanUsername && f.registered);
+      if (facultyUser) {
+          if (facultyUser.password && atob(facultyUser.password) === password) {
+              onLoginSuccess({ username: facultyUser.username!, role: 'faculty', empId: facultyUser.empId });
+              return;
+          }
+      }
+      
+      // 3. If no user found, check pending users for a helpful message
+      const pendingRef = db.ref(`pendingUsers/${cleanUsername}`);
+      const pendingSnapshot = await pendingRef.get();
+      if (pendingSnapshot.exists()) {
+        setError("Your account is pending approval by an administrator.");
+        return;
+      }
+      
+      setError('Invalid username or password.');
+
     } catch (err) {
       console.error("Login error:", err);
       setError("An error occurred during login. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateAccount = async () => {
-    if (!username || !password) {
-      setError("Username and password are required.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setCreationSuccess(false);
-
-    try {
-      const cleanUsername = username.trim();
-      if (cleanUsername === 'admin') {
-        setError("Cannot create a user with the username 'admin'.");
-        return;
-      }
-
-      const userRef = db.ref(`users/${cleanUsername}`);
-      const pendingRef = db.ref(`pendingUsers/${cleanUsername}`);
-      
-      const [userSnapshot, pendingSnapshot] = await Promise.all([userRef.get(), pendingRef.get()]);
-
-      if (userSnapshot.exists() || pendingSnapshot.exists()) {
-        setError("This username is already taken or pending approval.");
-        return;
-      }
-
-      await pendingRef.set({
-        username: cleanUsername,
-        password: btoa(password), // Store password as base64
-      });
-
-      setCreationSuccess(true);
-      setUsername('');
-      setPassword('');
-    } catch (err) {
-      console.error("Create user error:", err);
-      setError("Failed to create account. Please check database permissions.");
     } finally {
       setLoading(false);
     }
@@ -112,10 +106,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, theme, onThemeTog
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-highlight dark:text-teal-300">
-            Faculty Attendance
+            ACT HR Management
           </h1>
           <p className="text-text-secondary dark:text-gray-400">
-            Please sign in or create an account
+            Please sign in to continue
           </p>
         </div>
 
@@ -154,52 +148,48 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, theme, onThemeTog
               </div>
             )}
             
-            {creationSuccess && (
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
-                <CheckCircle size={16} />
-                <span>Account created. Please wait for admin approval.</span>
+            {successMessage && !error && (
+              <div className="flex items-start gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
+                <span>{successMessage}</span>
               </div>
             )}
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 pt-2">
               <button
                 type="submit"
-                disabled={loading || settingsLoading}
+                disabled={loading}
                 className="w-full py-2 px-4 flex items-center justify-center gap-2 rounded-md bg-highlight text-primary dark:bg-teal-500 disabled:opacity-50"
               >
                 {loading ? <Loader2 className="animate-spin" /> : <KeyRound size={18} />}
                 Sign In
               </button>
-              
-              {settings.accountCreationEnabled && (
-                <button
-                    type="button"
-                    onClick={handleCreateAccount}
-                    disabled={loading || settingsLoading}
-                    className="w-full py-2 px-4 flex items-center justify-center gap-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50"
-                >
-                    {loading ? <Loader2 className="animate-spin" /> : <UserPlus size={18} />}
-                    Create Account
-                </button>
-              )}
             </div>
           </form>
+           <div className="mt-4 text-center text-sm text-text-secondary dark:text-gray-400">
+                {settings.accountCreationEnabled && (
+                    <button onClick={onGoToRegister} className="text-highlight hover:underline dark:text-teal-300">
+                        Faculty Registration
+                    </button>
+                )}
+                 {settings.accountCreationEnabled && settings.userAccountRequestEnabled && (
+                    <span className="mx-2">|</span>
+                )}
+                {settings.userAccountRequestEnabled && (
+                    <button onClick={onGoToAdminRegister} className="text-highlight hover:underline dark:text-teal-300">
+                        Request User Account
+                    </button>
+                )}
+            </div>
         </div>
 
         <div className="mt-6 p-4 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex gap-3">
           <Info size={18} className="flex-shrink-0 mt-0.5" />
           <div>
-            {/* 
             <p>
-              Default admin: <strong>admin</strong> / <strong>password</strong>
-            </p>
-            */}
-            
-            <p className="mt-1">
-              New accounts require admin approval before you can log in.
+              Admins and other general users must use the provided credentials or request an account for approval.
             </p>
           </div>
-
         </div>
       </div>
     </div>
