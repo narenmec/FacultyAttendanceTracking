@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useFacultyData } from '../hooks/useFacultyData';
 import FacultyTable from './FacultyTable';

@@ -79,7 +79,6 @@ export interface MonthlySummary {
   halfDayLeaves: number;
   casualLeavesAvailable: number;
   casualLeavesUsed: number;
-
   unpaidLeave: number;
   totalLeaves: number;
   payableDays: number;
