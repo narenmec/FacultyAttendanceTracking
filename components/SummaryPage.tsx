@@ -1,11 +1,11 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSummaryData } from '../hooks/useSummaryData';
 import SummaryTable from './SummaryTable';
 import { generateSummaryPDF, generateBriefSummaryPDF } from '../utils/pdfGenerator';
 import { generateSummaryCSV } from '../utils/csvGenerator';
-import { FileDown, Calendar, Briefcase, FileSpreadsheet, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
+import { FileDown, Calendar, Briefcase, FileSpreadsheet, AlertTriangle, CheckCircle, FileText, Loader2 } from 'lucide-react';
 
 interface SummaryPageProps {
   onFacultySelect: (empId: number) => void;
@@ -24,11 +24,20 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ onFacultySelect }) => {
         setMonthlyWorkingDays,
         finalizeAndDeductCLs,
         updatePayableDays,
+        isAllocationRun,
+        isCheckingAllocation,
     } = useSummaryData();
 
     const [isFinalizeModalOpen, setIsFinalizeModalOpen] = useState(false);
     const [isFinalizing, setIsFinalizing] = useState(false);
     const [finalizeFeedback, setFinalizeFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+    const monthYearDisplay = useMemo(() => {
+        if (!selectedMonth) return '';
+        const [year, month] = selectedMonth.split('-');
+        const date = new Date(parseInt(year, 10), parseInt(month, 10) - 1, 2);
+        return date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    }, [selectedMonth]);
 
     const handlePdfExport = () => {
         if (summaryData.length > 0) {
@@ -103,6 +112,37 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ onFacultySelect }) => {
                      <button onClick={() => setFinalizeFeedback(null)} className="text-2xl">&times;</button>
                 </div>
             )}
+            
+            {!loading && !error && (
+                isCheckingAllocation ? (
+                    <div className="p-4 rounded-lg flex items-center gap-3 bg-blue-100 dark:bg-blue-900/50">
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+                        <p className="text-sm text-blue-700 dark:text-blue-400">
+                            Checking monthly allocation status for {monthYearDisplay}...
+                        </p>
+                    </div>
+                ) : isAllocationRun ? (
+                    <div className="p-4 rounded-lg flex items-start gap-3 bg-green-100 dark:bg-green-900/50 border-green-400 dark:border-green-700">
+                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-green-800 dark:text-green-300">Allocation Complete</p>
+                            <p className="text-sm text-green-700 dark:text-green-400">
+                                The monthly Casual Leave (CL) allocation has been successfully run for <strong>{monthYearDisplay}</strong>. You may proceed with finalizing the month.
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="p-4 rounded-lg flex items-start gap-3 bg-yellow-100 dark:bg-yellow-900/50 border-yellow-400 dark:border-yellow-700">
+                        <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-semibold text-yellow-800 dark:text-yellow-300">Action Required</p>
+                            <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                                The monthly CL allocation has not been run for <strong>{monthYearDisplay}</strong>. Please go to <strong>Settings &gt; Monthly Actions</strong> to run the allocation before finalizing.
+                            </p>
+                        </div>
+                    </div>
+                )
+            )}
 
             <div className="bg-secondary p-6 rounded-lg shadow-xl dark:bg-gray-800">
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -163,7 +203,7 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ onFacultySelect }) => {
                     <div className="lg:col-span-2">
                         <button
                             onClick={() => setIsFinalizeModalOpen(true)}
-                            disabled={summaryData.length === 0 || monthlyWorkingDays <= 0}
+                            disabled={summaryData.length === 0 || monthlyWorkingDays <= 0 || !isAllocationRun || isCheckingAllocation}
                             className="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center gap-2"
                         >
                             <CheckCircle size={18} />
@@ -191,7 +231,7 @@ const SummaryPage: React.FC<SummaryPageProps> = ({ onFacultySelect }) => {
                                 </h3>
                                 <div className="mt-2">
                                     <p className="text-sm text-text-secondary dark:text-gray-400">
-                                    You are about to finalize the summary for <strong className="dark:text-gray-200">{selectedMonth}</strong>. This will permanently deduct the 'CL Used' from each faculty member's CL balance. This action cannot be undone.
+                                    You are about to finalize the summary for <strong className="dark:text-gray-200">{monthYearDisplay}</strong>. This will permanently deduct the 'CL Used' from each faculty member's CL balance. This action cannot be undone.
                                     </p>
                                 </div>
                                 </div>

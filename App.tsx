@@ -6,19 +6,33 @@ import FacultyPage from './components/FacultyPage';
 import SummaryPage from './components/SummaryPage';
 import SettingsPage from './components/SettingsPage';
 import FacultyDetailPage from './components/FacultyDetailPage';
+import LoginPage from './components/LoginPage';
+import UserManagementPage from './components/UserManagementPage';
 import { useAttendanceData } from './hooks/useAttendanceData';
-import { LayoutDashboard, Upload, Users, Sheet, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, Upload, Users, Sheet, Settings as SettingsIcon, LogOut, UserCog } from 'lucide-react';
 import ThemeToggle from './components/ThemeToggle';
 
 const App: React.FC = () => {
-  const [page, setPage] = useState<'dashboard' | 'upload' | 'faculty' | 'summary' | 'settings' | 'facultyDetail'>('dashboard');
+  const [page, setPage] = useState<'dashboard' | 'upload' | 'faculty' | 'summary' | 'settings' | 'facultyDetail' | 'userManagement'>('dashboard');
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
   const [previousPage, setPreviousPage] = useState<'dashboard' | 'faculty' | 'summary'>('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   
   const [theme, setTheme] = useState<'light' | 'dark'>(
     () => (localStorage.getItem('theme') as 'light' | 'dark') || 'light'
   );
   const attendanceData = useAttendanceData();
+
+  useEffect(() => {
+    // Check session storage on initial load
+    const loggedIn = sessionStorage.getItem('isAuthenticated');
+    const user = sessionStorage.getItem('currentUser');
+    if (loggedIn === 'true' && user) {
+      setIsAuthenticated(true);
+      setCurrentUser(user);
+    }
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -29,6 +43,21 @@ const App: React.FC = () => {
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  const handleLoginSuccess = (username: string) => {
+    sessionStorage.setItem('isAuthenticated', 'true');
+    sessionStorage.setItem('currentUser', username);
+    setIsAuthenticated(true);
+    setCurrentUser(username);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('currentUser');
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    setPage('dashboard'); // Reset to default page on logout
+  };
 
   const handleThemeToggle = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
@@ -83,9 +112,15 @@ const App: React.FC = () => {
         return <SettingsPage />;
       case 'facultyDetail':
         return selectedEmpId ? <FacultyDetailPage empId={selectedEmpId} onBack={handleBack} theme={theme} /> : <Dashboard {...attendanceData} theme={theme} onFacultySelect={handleFacultySelect} />;
+      case 'userManagement':
+        return <UserManagementPage />;
       default:
         return <Dashboard {...attendanceData} theme={theme} onFacultySelect={handleFacultySelect} />;
     }
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage onLoginSuccess={handleLoginSuccess} theme={theme} onThemeToggle={handleThemeToggle} />;
   }
 
   return (
@@ -115,7 +150,20 @@ const App: React.FC = () => {
             <SettingsIcon size={16} />
             Settings
           </NavButton>
+          {currentUser === 'admin' && (
+             <NavButton active={page === 'userManagement'} onClick={() => setPage('userManagement')}>
+                <UserCog size={16} />
+                User Management
+             </NavButton>
+          )}
           <ThemeToggle theme={theme} onToggle={handleThemeToggle} />
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900"
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
         </nav>
       </header>
       <main className="p-4 md:p-8">

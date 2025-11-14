@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { db } from '../firebase/config';
 import { AttendanceRecord, FacultyRecord, AttendanceStatus } from '../types';
@@ -67,8 +68,9 @@ export const useFacultyDetailData = (empId: number) => {
         const absent = filteredAttendance.filter(r => r.status === AttendanceStatus.Absent).length;
         const onDuty = filteredAttendance.filter(r => r.status === AttendanceStatus.OnDuty).length;
         const present = onTime + late + onDuty;
-        return { onTime, late, absent, onDuty, present };
-    }, [filteredAttendance]);
+        const clUsedThisMonth = Math.min(absent, faculty?.casualLeaves ?? 0);
+        return { onTime, late, absent, onDuty, present, clUsedThisMonth };
+    }, [filteredAttendance, faculty]);
 
     return {
         faculty,

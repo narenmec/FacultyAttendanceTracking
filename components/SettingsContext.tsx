@@ -12,6 +12,7 @@ interface SettingsContextType {
 const DEFAULT_SETTINGS: Settings = {
   onTimeThreshold: '08:15:00',
   permissionLimit: 2,
+  accountCreationEnabled: true,
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

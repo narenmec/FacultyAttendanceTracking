@@ -68,4 +68,11 @@ export interface MonthlySummary {
 export interface Settings {
   onTimeThreshold: string;
   permissionLimit: number;
+  accountCreationEnabled: boolean;
+}
+
+export interface Holiday {
+  id: string; // Will be the date string 'YYYY-MM-DD'
+  date: string;
+  description: string;
 }

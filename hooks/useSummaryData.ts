@@ -1,18 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { db } from '../firebase/config';
-import { AttendanceRecord, FacultyRecord, MonthlySummary, AttendanceStatus } from '../types';
+import { AttendanceRecord, FacultyRecord, MonthlySummary, AttendanceStatus, Holiday } from '../types';
 import { useSettings } from '../components/SettingsContext';
 
 export const useSummaryData = () => {
     const { settings } = useSettings();
     const [rawAttendance, setRawAttendance] = useState<AttendanceRecord[]>([]);
     const [facultyList, setFacultyList] = useState<FacultyRecord[]>([]);
+    const [holidays, setHolidays] = useState<Holiday[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     
     const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7));
     const [monthlyWorkingDays, setMonthlyWorkingDays] = useState<number>(0);
     const [summaryData, setSummaryData] = useState<MonthlySummary[]>([]);
+
+    const [isAllocationRun, setIsAllocationRun] = useState<boolean>(false);
+    const [isCheckingAllocation, setIsCheckingAllocation] = useState<boolean>(true);
 
     useEffect(() => {
         // When the selected month changes, update the monthly working days to the total days in that month.
@@ -25,17 +29,43 @@ export const useSummaryData = () => {
     }, [selectedMonth]);
 
     useEffect(() => {
+        const checkAllocationStatus = async () => {
+            if (!selectedMonth) return;
+            setIsCheckingAllocation(true);
+            setIsAllocationRun(false); // Reset on month change
+            try {
+                const allocationRef = db.ref(`monthlyAllocations/${selectedMonth}`);
+                const snapshot = await allocationRef.get();
+                if (snapshot.exists() && snapshot.val().completed) {
+                    setIsAllocationRun(true);
+                } else {
+                    setIsAllocationRun(false);
+                }
+            } catch (err) {
+                console.error("Error checking allocation status:", err);
+                setIsAllocationRun(false); // Assume not run if error
+            } finally {
+                setIsCheckingAllocation(false);
+            }
+        };
+
+        checkAllocationStatus();
+    }, [selectedMonth]);
+
+    useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
             setError(null);
             try {
-                // Fetch both faculty and attendance data in parallel
+                // Fetch all data in parallel
                 const facultyRef = db.ref('faculty');
                 const attendanceRef = db.ref('attendance');
+                const holidaysRef = db.ref('holidays');
 
-                const [facultySnapshot, attendanceSnapshot] = await Promise.all([
+                const [facultySnapshot, attendanceSnapshot, holidaysSnapshot] = await Promise.all([
                     facultyRef.get(),
-                    attendanceRef.get()
+                    attendanceRef.get(),
+                    holidaysRef.get()
                 ]);
 
                 // Process faculty data
@@ -74,6 +104,16 @@ export const useSummaryData = () => {
                 }
                 setRawAttendance(flattenedData);
 
+                // Process holiday data
+                const loadedHolidays: Holiday[] = [];
+                if (holidaysSnapshot.exists()) {
+                    const dataFromDb = holidaysSnapshot.val();
+                    for (const id in dataFromDb) {
+                        loadedHolidays.push({ id, ...dataFromDb[id] });
+                    }
+                }
+                setHolidays(loadedHolidays);
+
             } catch (err) {
                 console.error("Error fetching summary data: ", err);
                 setError("Failed to load data for summary calculation.");
@@ -98,13 +138,16 @@ export const useSummaryData = () => {
             }
             attendanceByEmpId.get(rec.empId)!.push(rec);
         });
+        
+        const holidaysInMonth = holidays.filter(h => h.date.startsWith(selectedMonth)).length;
+        const actualWorkingDays = Math.max(0, monthlyWorkingDays - holidaysInMonth);
 
         const newSummaryData = facultyList.map(faculty => {
             const records = attendanceByEmpId.get(faculty.empId) || [];
             
             // Core leave calculation logic
             const presentDays = records.filter(r => r.status !== AttendanceStatus.Absent).length;
-            const absentDays = Math.max(0, monthlyWorkingDays - presentDays);
+            const absentDays = Math.max(0, actualWorkingDays - presentDays);
             const casualLeavesAvailable = faculty.casualLeaves || 0;
             const casualLeavesUsed = Math.min(absentDays, casualLeavesAvailable);
             const unpaidLeave = absentDays - casualLeavesUsed;
@@ -116,10 +159,10 @@ export const useSummaryData = () => {
             
             // Final salary calculation
             const totalLeaves = unpaidLeave + (0.5 * halfDayLeaves);
-            const payableDays = Math.max(0, monthlyWorkingDays - totalLeaves);
+            const payableDays = Math.max(0, actualWorkingDays - totalLeaves);
             
-            const calculatedSalary = faculty.salary > 0 && monthlyWorkingDays > 0
-                ? (payableDays / monthlyWorkingDays) * faculty.salary
+            const calculatedSalary = faculty.salary > 0 && actualWorkingDays > 0
+                ? (payableDays / actualWorkingDays) * faculty.salary
                 : 0;
 
             return {
@@ -141,7 +184,7 @@ export const useSummaryData = () => {
         });
 
         setSummaryData(newSummaryData);
-    }, [facultyList, rawAttendance, selectedMonth, monthlyWorkingDays, settings.permissionLimit]);
+    }, [facultyList, rawAttendance, holidays, selectedMonth, monthlyWorkingDays, settings.permissionLimit]);
 
     useEffect(() => {
         calculateSummary();
@@ -153,8 +196,12 @@ export const useSummaryData = () => {
                 if (item.empId === empId) {
                     const faculty = facultyList.find(f => f.empId === empId);
                     const salary = faculty ? faculty.salary : 0;
-                    const newCalculatedSalary = salary > 0 && monthlyWorkingDays > 0
-                        ? (newPayableDays / monthlyWorkingDays) * salary
+                    
+                    const holidaysInMonth = holidays.filter(h => h.date.startsWith(selectedMonth)).length;
+                    const actualWorkingDays = Math.max(0, monthlyWorkingDays - holidaysInMonth);
+                    
+                    const newCalculatedSalary = salary > 0 && actualWorkingDays > 0
+                        ? (newPayableDays / actualWorkingDays) * salary
                         : 0;
                     
                     return { 
@@ -166,7 +213,7 @@ export const useSummaryData = () => {
                 return item;
             });
         });
-    }, [monthlyWorkingDays, facultyList]);
+    }, [monthlyWorkingDays, facultyList, holidays, selectedMonth]);
 
     const finalizeAndDeductCLs = async () => {
         if (summaryData.length === 0) {
@@ -215,5 +262,7 @@ export const useSummaryData = () => {
         recalculate: calculateSummary,
         updatePayableDays,
         finalizeAndDeductCLs,
+        isAllocationRun,
+        isCheckingAllocation,
     };
 };

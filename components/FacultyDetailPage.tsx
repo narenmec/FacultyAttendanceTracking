@@ -1,7 +1,8 @@
 
+
 import React from 'react';
 import { useFacultyDetailData } from '../hooks/useFacultyDetailData';
-import { ArrowLeft, Loader2, User, Briefcase, Building, Clock, AlertTriangle, UserX, ClipboardCheck, Calendar as CalendarIcon } from 'lucide-react';
+import { ArrowLeft, Loader2, User, Briefcase, Building, Clock, AlertTriangle, UserX, ClipboardCheck, Calendar as CalendarIcon, Wallet } from 'lucide-react';
 import CalendarView from './CalendarView';
 import { AttendanceRecord, AttendanceStatus } from '../types';
 
@@ -18,6 +19,21 @@ const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; 
             <div>
                 <p className="text-sm text-text-secondary font-medium dark:text-gray-400">{title}</p>
                 <p className="text-xl font-bold text-text-primary dark:text-gray-100">{value}</p>
+            </div>
+        </div>
+    );
+};
+
+const ClBalanceCard: React.FC<{ balance: number; used: number; }> = ({ balance, used }) => {
+    return (
+        <div className="bg-secondary p-4 rounded-lg shadow-lg flex items-start space-x-3 dark:bg-gray-800">
+            <div className="p-3 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400">
+                <Wallet size={24} />
+            </div>
+            <div className="flex-1">
+                <p className="text-sm text-text-secondary font-medium dark:text-gray-400">CL Balance</p>
+                <p className="text-xl font-bold text-text-primary dark:text-gray-100">{balance}</p>
+                <p className="text-xs text-text-secondary dark:text-gray-400 mt-1">{used} used this month</p>
             </div>
         </div>
     );
@@ -122,11 +138,12 @@ const FacultyDetailPage: React.FC<FacultyDetailPageProps> = ({ empId, onBack, th
         </div>
       </div>
 
-       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <StatCard title="Present Days" value={monthStats.present} icon={<Clock size={24} className="text-green-500"/>} />
             <StatCard title="Late Days" value={monthStats.late} icon={<AlertTriangle size={24} className="text-red-500"/>} />
             <StatCard title="Absent Days" value={monthStats.absent} icon={<UserX size={24} className="text-yellow-500"/>} />
             <StatCard title="On-Duty" value={monthStats.onDuty} icon={<ClipboardCheck size={24} className="text-blue-500"/>} />
+            <ClBalanceCard balance={faculty.casualLeaves} used={monthStats.clUsedThisMonth} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

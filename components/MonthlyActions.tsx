@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import { FacultyRecord, AttendanceStatus } from '../types';
 import { Calendar, Gift, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -13,8 +13,38 @@ const MonthlyActions: React.FC = () => {
     const [selectedMonth, setSelectedMonth] = useState(getPreviousMonth());
     const [isLoading, setIsLoading] = useState(false);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+    const [isAllocationComplete, setIsAllocationComplete] = useState(false);
+
+    // Check allocation status whenever the selected month changes
+    useEffect(() => {
+        const checkAllocationStatus = async () => {
+            if (!selectedMonth) return;
+            setIsCheckingStatus(true);
+            setIsAllocationComplete(false);
+            setFeedback(null);
+            try {
+                const allocationRef = db.ref(`monthlyAllocations/${selectedMonth}`);
+                const snapshot = await allocationRef.get();
+                if (snapshot.exists() && snapshot.val().completed) {
+                    setIsAllocationComplete(true);
+                }
+            } catch (err) {
+                console.error("Error checking allocation status:", err);
+                setFeedback({ type: 'error', message: 'Could not verify allocation status for this month.' });
+            } finally {
+                setIsCheckingStatus(false);
+            }
+        };
+
+        checkAllocationStatus();
+    }, [selectedMonth]);
 
     const handleAllocateCL = async () => {
+        if (isAllocationComplete) {
+            setFeedback({ type: 'error', message: "This action has already been completed for the selected month." });
+            return;
+        }
         setIsLoading(true);
         setFeedback(null);
         try {
@@ -42,7 +72,7 @@ const MonthlyActions: React.FC = () => {
                     for (const date in records) {
                         if (date.startsWith(selectedMonth) && records[date].status === AttendanceStatus.Absent) {
                             facultyWithAbsences.add(parseInt(empId, 10));
-                            break; // No need to check other dates for this employee
+                            break; 
                         }
                     }
                 }
@@ -59,14 +89,24 @@ const MonthlyActions: React.FC = () => {
                 }
             });
 
-            if (updatedCount === 0) {
-                setFeedback({ type: 'success', message: `Process complete. No faculty members were eligible for a CL for ${selectedMonth}.` });
-                return;
+            // 4. Perform batch update if needed
+            if (updatedCount > 0) {
+                 await db.ref().update(updates);
             }
+           
+            // 5. Record that the allocation is complete for this month
+            await db.ref(`monthlyAllocations/${selectedMonth}`).set({
+                completed: true,
+                timestamp: new Date().toISOString(),
+                updatedCount,
+            });
+            setIsAllocationComplete(true); // Update UI state immediately
 
-            // 4. Perform batch update
-            await db.ref().update(updates);
-            setFeedback({ type: 'success', message: `Successfully allocated 1 CL to ${updatedCount} faculty members for ${selectedMonth}.` });
+            if (updatedCount === 0) {
+                setFeedback({ type: 'success', message: `Process complete. No faculty members were eligible for a CL. This action is now locked for ${selectedMonth}.` });
+            } else {
+                setFeedback({ type: 'success', message: `Successfully allocated 1 CL to ${updatedCount} faculty members. This action is now locked for ${selectedMonth}.` });
+            }
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred.";
@@ -114,18 +154,24 @@ const MonthlyActions: React.FC = () => {
                     </div>
                     <button
                         onClick={handleAllocateCL}
-                        disabled={isLoading}
+                        disabled={isLoading || isCheckingStatus || isAllocationComplete}
                         className="w-full sm:w-auto flex justify-center items-center gap-2 bg-highlight text-primary font-bold py-2 px-4 rounded-md hover:bg-teal-300 disabled:bg-gray-500 disabled:cursor-not-allowed transition-colors duration-200 dark:bg-teal-500 dark:hover:bg-teal-400"
                     >
-                         {isLoading ? (
+                         {isLoading || isCheckingStatus ? (
                             <>
-                                <Loader2 className="h-5 w-5 animate-spin"/> Processing...
+                                <Loader2 className="h-5 w-5 animate-spin"/> {isCheckingStatus ? 'Checking Status...' : 'Processing...'}
                             </>
                         ) : (
                            'Run Allocation'
                         )}
                     </button>
                 </div>
+                 {isAllocationComplete && !isCheckingStatus && !feedback && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Allocation for this month has already been completed.
+                    </p>
+                )}
             </div>
         </div>
     );
