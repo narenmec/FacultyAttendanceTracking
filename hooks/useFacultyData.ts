@@ -98,6 +98,28 @@ export const useFacultyData = () => {
     }
   }, []);
 
+  const deleteFaculty = useCallback(async (empId: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Deleting a faculty member also removes their associated attendance records
+      // to maintain data integrity. This is a hard delete.
+      const updates: { [key: string]: null } = {};
+      updates[`/faculty/${empId}`] = null;
+      updates[`/attendance/${empId}`] = null;
+
+      await db.ref().update(updates);
+
+      setFacultyList(prev => prev.filter(f => f.empId !== empId));
+    } catch(err) {
+        console.error("Failed to delete faculty member:", err);
+        setError("Failed to delete faculty member.");
+        throw err; // Re-throw to be caught in the component
+    } finally {
+        setLoading(false);
+    }
+  }, []);
+
   const handleFileUpload = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -147,6 +169,7 @@ export const useFacultyData = () => {
     loading,
     addFaculty,
     updateFaculty,
+    deleteFaculty,
     handleFileUpload,
     clearError: () => setError(null)
   };
