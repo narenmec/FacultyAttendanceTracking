@@ -5,6 +5,11 @@ import ThemeToggle from './ThemeToggle';
 import { FacultyRecord } from '../types';
 import { useSettings } from './SettingsContext';
 
+interface UserAccount {
+  username: string;
+  password?: string;
+}
+
 interface LoginPageProps {
   onLoginSuccess: (user: { username: string; role: 'admin' | 'faculty'; empId?: number }) => void;
   onGoToRegister: () => void;
@@ -18,36 +23,58 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // For login button action
+  const [initialLoading, setInitialLoading] = useState(true); // For initial data fetch
+
   const [allFaculty, setAllFaculty] = useState<FacultyRecord[]>([]);
+  const [allUsers, setAllUsers] = useState<UserAccount[]>([]);
+  const [allPendingUsers, setAllPendingUsers] = useState<UserAccount[]>([]);
+
   const { settings } = useSettings();
 
   useEffect(() => {
-    // Fetch all faculty records once on component mount for login check
-    const fetchFaculty = async () => {
-        setLoading(true);
+    // Fetch all user types once on component mount to avoid invalid path errors on login attempts.
+    const fetchAllUserData = async () => {
+        setInitialLoading(true);
+        setError(null);
         try {
             const facultyRef = db.ref('faculty');
-            const snapshot = await facultyRef.get();
-            if (snapshot.exists()) {
-                const data = snapshot.val();
+            const usersRef = db.ref('users');
+            const pendingUsersRef = db.ref('pendingUsers');
+
+            const [facultySnapshot, usersSnapshot, pendingUsersSnapshot] = await Promise.all([
+                facultyRef.get(),
+                usersRef.get(),
+                pendingUsersRef.get()
+            ]);
+
+            if (facultySnapshot.exists()) {
+                const data = facultySnapshot.val();
                 const list: FacultyRecord[] = Object.keys(data).map(empId => ({
                     empId: parseInt(empId),
                     ...data[empId]
                 }));
                 setAllFaculty(list);
             }
+
+            if (usersSnapshot.exists()) {
+                setAllUsers(Object.values(usersSnapshot.val()));
+            }
+
+            if (pendingUsersSnapshot.exists()) {
+                setAllPendingUsers(Object.values(pendingUsersSnapshot.val()));
+            }
         } catch (err) {
-            console.error("Error fetching faculty for login:", err);
+            console.error("Error fetching user data for login:", err);
             setError("Could not connect to the database to verify users.");
         } finally {
-            setLoading(false);
+            setInitialLoading(false);
         }
     };
-    fetchFaculty();
+    fetchAllUserData();
   }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
       setError("Username and password are required.");
@@ -57,44 +84,49 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
     setLoading(true);
     setError(null);
 
-    try {
-      const cleanUsername = username.trim();
-      
-      // 1. Check for any approved general user (admin, dean, etc.)
-      const userRef = db.ref(`users/${cleanUsername}`);
-      const userSnapshot = await userRef.get();
-      if (userSnapshot.exists() && userSnapshot.val().password) {
-          if (atob(userSnapshot.val().password) === password) {
-              onLoginSuccess({ username: cleanUsername, role: 'admin' });
-              return;
+    // Use a short delay to ensure UI updates before synchronous check,
+    // which might block the main thread momentarily on large datasets.
+    setTimeout(() => {
+        try {
+          const cleanUsername = username.trim();
+          
+          // 1. Check for approved general users (admin, dean, etc.) against pre-fetched data
+          const generalUser = allUsers.find(u => u.username === cleanUsername);
+          if (generalUser && generalUser.password) {
+              if (atob(generalUser.password) === password) {
+                  onLoginSuccess({ username: cleanUsername, role: 'admin' });
+                  setLoading(false);
+                  return;
+              }
           }
-      }
-
-      // 2. Check for Faculty
-      const facultyUser = allFaculty.find(f => f.username === cleanUsername && f.registered);
-      if (facultyUser) {
-          if (facultyUser.password && atob(facultyUser.password) === password) {
-              onLoginSuccess({ username: facultyUser.username!, role: 'faculty', empId: facultyUser.empId });
-              return;
+    
+          // 2. Check for Faculty against pre-fetched data
+          const facultyUser = allFaculty.find(f => f.username === cleanUsername && f.registered);
+          if (facultyUser) {
+              if (facultyUser.password && atob(facultyUser.password) === password) {
+                  onLoginSuccess({ username: facultyUser.username!, role: 'faculty', empId: facultyUser.empId });
+                  setLoading(false);
+                  return;
+              }
           }
-      }
-      
-      // 3. If no user found, check pending users for a helpful message
-      const pendingRef = db.ref(`pendingUsers/${cleanUsername}`);
-      const pendingSnapshot = await pendingRef.get();
-      if (pendingSnapshot.exists()) {
-        setError("Your account is pending approval by an administrator.");
-        return;
-      }
-      
-      setError('Invalid username or password.');
-
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("An error occurred during login. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+          
+          // 3. If no user found, check pending users against pre-fetched data
+          const pendingUser = allPendingUsers.find(u => u.username === cleanUsername);
+          if (pendingUser) {
+            setError("Your account is pending approval by an administrator.");
+            setLoading(false);
+            return;
+          }
+          
+          setError('Invalid username or password.');
+    
+        } catch (err) {
+          console.error("Login error:", err);
+          setError("An error occurred during login. Please try again.");
+        } finally {
+          setLoading(false);
+        }
+    }, 50);
   };
 
   return (
@@ -158,10 +190,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
             <div className="flex flex-col gap-3 pt-2">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || initialLoading}
                 className="w-full py-2 px-4 flex items-center justify-center gap-2 rounded-md bg-highlight text-primary dark:bg-teal-500 disabled:opacity-50"
               >
-                {loading ? <Loader2 className="animate-spin" /> : <KeyRound size={18} />}
+                {loading || initialLoading ? <Loader2 className="animate-spin" /> : <KeyRound size={18} />}
                 Sign In
               </button>
             </div>
