@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { AttendanceRecord, AttendanceStatus } from '../types';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -44,8 +43,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data, onFacultySelect
   };
   
   const SortableHeader: React.FC<{ sortKey: SortKey, children: React.ReactNode }> = ({ sortKey, children }) => (
-    <th className="p-3 text-left font-semibold text-text-secondary tracking-wider dark:text-gray-400">
-      <button onClick={() => requestSort(sortKey)} className="flex items-center gap-2 hover:text-text-primary dark:hover:text-gray-200">
+    <th className="p-3 text-left text-sm font-semibold text-text-secondary tracking-wider dark:text-gray-400">
+      <button onClick={() => requestSort(sortKey)} className="flex items-center gap-2 hover:text-text-primary dark:hover:text-gray-200 transition-colors">
         {children}
         <ArrowUpDown size={14} />
       </button>
@@ -58,8 +57,8 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data, onFacultySelect
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-accent dark:divide-gray-700">
-        <thead className="bg-primary dark:bg-gray-900">
+      <table className="min-w-full divide-y divide-accent dark:divide-dark-accent">
+        <thead className="bg-primary/80 dark:bg-dark-secondary/50">
           <tr>
             <SortableHeader sortKey="empId">Emp. ID</SortableHeader>
             <SortableHeader sortKey="name">Name</SortableHeader>
@@ -69,12 +68,12 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data, onFacultySelect
             <SortableHeader sortKey="status">Status</SortableHeader>
           </tr>
         </thead>
-        <tbody className="bg-secondary divide-y divide-accent dark:bg-gray-800 dark:divide-gray-700">
+        <tbody className="bg-secondary divide-y divide-accent dark:bg-dark-secondary dark:divide-dark-accent">
           {paginatedData.map((record) => (
-            <tr key={record.id} className="hover:bg-accent transition-colors duration-150 dark:hover:bg-gray-700">
+            <tr key={record.id} className="hover:bg-accent/50 transition-colors duration-150 dark:hover:bg-dark-accent/50 odd:bg-primary/50 dark:odd:bg-dark-secondary/20">
               <td className="p-3 text-sm text-text-primary dark:text-gray-300">{record.empId}</td>
               <td className="p-3 text-sm text-text-primary whitespace-nowrap dark:text-gray-300">
-                <button onClick={() => onFacultySelect(record.empId)} className="text-left hover:underline text-highlight dark:text-teal-300">
+                <button onClick={() => onFacultySelect(record.empId)} className="text-left hover:underline text-highlight dark:text-teal-400 font-medium">
                   {record.name}
                 </button>
               </td>
@@ -102,18 +101,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data, onFacultySelect
         <span>
           Page {currentPage} of {totalPages}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
             <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="p-2 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-gray-700"
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-dark-accent"
             >
                 <ChevronLeft size={16}/>
             </button>
             <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
-                className="p-2 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-gray-700"
+                className="p-2 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed dark:hover:bg-dark-accent"
             >
                 <ChevronRight size={16}/>
             </button>

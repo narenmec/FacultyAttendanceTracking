@@ -106,10 +106,10 @@ const App: React.FC = () => {
   }> = ({ active, onClick, children }) => (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ease-in-out border-b-2 ${
         active
-          ? 'bg-highlight text-primary dark:bg-teal-500 dark:text-gray-100'
-          : 'text-text-secondary hover:bg-accent hover:text-text-primary dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
+          ? 'bg-highlight/10 text-highlight border-highlight dark:bg-highlight/20 dark:border-highlight'
+          : 'text-text-secondary border-transparent hover:bg-accent hover:text-text-primary dark:text-slate-400 dark:hover:bg-dark-accent/50 dark:hover:text-slate-200'
       }`}
     >
       {children}
@@ -163,9 +163,9 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-primary font-sans dark:bg-gray-900">
-      <header className="bg-secondary p-4 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 dark:bg-gray-800 dark:border-b dark:border-gray-700">
-        <h1 className="text-xl md:text-2xl font-bold text-highlight text-center sm:text-left dark:text-teal-300">
+    <div className="min-h-screen bg-primary font-sans dark:bg-dark-primary">
+      <header className="bg-secondary p-4 shadow-md flex flex-col sm:flex-row justify-between items-center gap-4 dark:bg-dark-secondary dark:border-b dark:border-dark-accent">
+        <h1 className="text-xl md:text-2xl font-bold text-highlight text-center sm:text-left dark:text-teal-400">
           ACT HR Management
         </h1>
         <nav className="flex items-center gap-2 flex-wrap justify-center">
@@ -209,7 +209,7 @@ const App: React.FC = () => {
             <ThemeToggle theme={theme} onToggle={handleThemeToggle} />
             <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-900"
             >
                 <LogOut size={16} />
                 Logout
@@ -219,7 +219,7 @@ const App: React.FC = () => {
       <main className="p-4 md:p-8">
         {renderPage()}
       </main>
-      <footer className="text-center p-4 text-text-secondary text-sm dark:text-gray-400">
+      <footer className="text-center p-4 text-text-secondary text-sm dark:text-slate-400 border-t border-accent dark:border-dark-accent">
         <p>Built with React, Tailwind CSS, and Firebase</p>
       </footer>
     </div>

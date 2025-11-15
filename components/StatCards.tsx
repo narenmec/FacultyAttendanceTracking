@@ -11,15 +11,17 @@ interface StatCardsProps {
   };
 }
 
-const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; color: string }> = ({ title, value, icon, color }) => {
+const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; colorClass: string }> = ({ title, value, icon, colorClass }) => {
     return (
-        <div className="bg-secondary p-6 rounded-lg shadow-xl flex items-center space-x-4 dark:bg-gray-800">
-            <div className={`p-3 rounded-full ${color}`}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-sm text-text-secondary font-medium dark:text-gray-400">{title}</p>
-                <p className="text-2xl font-bold text-text-primary dark:text-gray-100">{value}</p>
+        <div className={`bg-secondary p-5 rounded-xl shadow-lg dark:bg-dark-secondary border-t-4 ${colorClass} transition-transform transform hover:-translate-y-1`}>
+            <div className="flex justify-between items-start">
+                <div>
+                    <p className="text-sm text-text-secondary font-medium dark:text-slate-400">{title}</p>
+                    <p className="text-3xl font-bold text-text-primary dark:text-slate-100 mt-1">{value}</p>
+                </div>
+                <div className="p-2">
+                    {icon}
+                </div>
             </div>
         </div>
     );
@@ -29,11 +31,11 @@ const StatCard: React.FC<{ title: string; value: number; icon: React.ReactNode; 
 const StatCards: React.FC<StatCardsProps> = ({ stats }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-        <StatCard title="Total Faculty (Filtered)" value={stats.total} icon={<Users className="h-6 w-6 text-primary dark:text-gray-100"/>} color="bg-indigo-500"/>
-        <StatCard title="On-time Records" value={stats.onTime} icon={<Clock className="h-6 w-6 text-primary dark:text-gray-100"/>} color="bg-green-400"/>
-        <StatCard title="Late Records" value={stats.late} icon={<AlertTriangle className="h-6 w-6 text-primary dark:text-gray-100"/>} color="bg-red-400"/>
-        <StatCard title="Absent Records" value={stats.absent} icon={<UserX className="h-6 w-6 text-primary dark:text-gray-100"/>} color="bg-yellow-500"/>
-        <StatCard title="On-Duty Records" value={stats.onDuty} icon={<ClipboardCheck className="h-6 w-6 text-primary dark:text-gray-100"/>} color="bg-sky-500"/>
+        <StatCard title="Total Faculty" value={stats.total} icon={<Users className="h-7 w-7 text-indigo-500"/>} colorClass="border-indigo-500"/>
+        <StatCard title="On-time" value={stats.onTime} icon={<Clock className="h-7 w-7 text-green-500"/>} colorClass="border-green-500"/>
+        <StatCard title="Late" value={stats.late} icon={<AlertTriangle className="h-7 w-7 text-red-500"/>} colorClass="border-red-500"/>
+        <StatCard title="Absent" value={stats.absent} icon={<UserX className="h-7 w-7 text-yellow-500"/>} colorClass="border-yellow-500"/>
+        <StatCard title="On-Duty" value={stats.onDuty} icon={<ClipboardCheck className="h-7 w-7 text-sky-500"/>} colorClass="border-sky-500"/>
     </div>
   );
 };

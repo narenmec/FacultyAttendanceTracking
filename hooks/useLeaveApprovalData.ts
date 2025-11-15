@@ -48,12 +48,39 @@ export const useLeaveApprovalData = () => {
   
   const rejectLeave = useCallback(async (leaveId: string) => {
     const originalApplications = [...leaveApplications];
+    // Optimistically update UI
     setLeaveApplications(prev => prev.map(app => 
         app.id === leaveId ? { ...app, status: 'Rejected' } : app
     ));
+
     try {
-        await db.ref(`leaveApplications/${leaveId}`).update({ status: 'Rejected' });
+        const leaveApp = originalApplications.find(app => app.id === leaveId);
+        if (!leaveApp) {
+            throw new Error("Leave application not found to reject.");
+        }
+
+        const updates: { [key: string]: any } = {};
+        // Mark leave as rejected
+        updates[`/leaveApplications/${leaveId}/status`] = 'Rejected';
+        
+        // Find and nullify associated attendance records
+        const startParts = leaveApp.startDate.split('-').map(Number);
+        const endParts = leaveApp.endDate.split('-').map(Number);
+
+        const current = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+        const last = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+
+        while (current <= last) {
+            const dateString = current.toISOString().split('T')[0];
+            const recordPath = `/attendance/${leaveApp.empId}/records/${dateString}`;
+            updates[recordPath] = null;
+            current.setUTCDate(current.getUTCDate() + 1);
+        }
+
+        await db.ref('/').update(updates);
+
     } catch (err) {
+        // Revert UI on failure
         setLeaveApplications(originalApplications);
         console.error('Failed to reject leave:', err);
         throw new Error('Failed to reject leave. Please try again.');

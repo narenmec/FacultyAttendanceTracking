@@ -190,6 +190,17 @@ export const generateBriefSummaryPDF = (data: MonthlySummary[], month: string, w
   doc.save(`brief_summary_${month}.pdf`);
 };
 
+// FIX: Removed local declaration of FacultyRecord as it conflicted with the imported type from `types.ts`.
+// This ensures the application consistently uses the globally defined FacultyRecord type.
+/*
+export interface FacultyRecord {
+    name: string;
+    designation: string;
+    dept: string;
+    empId: string;
+}
+*/
+
 export interface LeaveApplicationDetails {
     faculty: FacultyRecord;
     startDate: string;
@@ -203,48 +214,103 @@ export interface LeaveApplicationDetails {
 export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) => {
     const doc = new jsPDF();
 
+    // Header
     doc.setFontSize(18);
     doc.setTextColor('#38b2ac');
-    doc.text('Leave Application', 105, 20, { align: 'center' });
+    doc.text('Agni College of Technology', 105, 10, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setTextColor('#2d3748');
+    doc.text('Thalambur, Chennai', 105, 17, { align: 'center' });
+    doc.setFontSize(16);
+    doc.setTextColor('#1a202c');
+    doc.text('Faculty Leave Application Form', 105, 25, { align: 'center' });
 
+    // Metadata
     doc.setFontSize(11);
     doc.setTextColor('#2d3748');
-    
-    doc.text(`Submission Date: ${details.submissionTimestamp.toLocaleDateString()}`, 150, 30, { align: 'right' });
+    doc.text(`Submission Date: ${details.submissionTimestamp.toLocaleDateString()}`, 150, 35, { align: 'right' });
     doc.setFontSize(9);
     doc.setTextColor('#718096');
-    doc.text(`Application ID: ${details.applicationId}`, 150, 35, { align: 'right' });
-    doc.setFontSize(11);
-    doc.setTextColor('#2d3748');
+    doc.text(`Application ID: ${details.applicationId}`, 150, 40, { align: 'right' });
 
-    doc.text('To,', 20, 45);
-    doc.text('The Principal,', 20, 51);
-    doc.text('[Your Institution Name],', 20, 57);
-    doc.text('[Your Institution Address]', 20, 63);
+    // Combined Faculty & Leave Details
+    const labels = [
+        'Faculty Name', 'Designation', 'Department', 'Employee ID',
+        'Leave Type', 'From', 'To'
+    ];
+    const values = [
+        details.faculty.name,
+        details.faculty.designation,
+        details.faculty.dept,
+        String(details.faculty.empId),
+        details.leaveType,
+        details.startDate,
+        details.endDate
+    ];
+
+    const tableX = 20;
+    const tableY = 50;
+    const colWidth = 80;
+    const rowHeight = 8;
+    doc.setLineWidth(0.5);
+    doc.rect(tableX, tableY, colWidth * 2, rowHeight * labels.length);
+
+    for (let i = 0; i < labels.length; i++) {
+        const y = tableY + i * rowHeight;
+        if (i > 0) doc.line(tableX, y, tableX + colWidth * 2, y); // horizontal line
+        doc.line(tableX + colWidth, y, tableX + colWidth, y + rowHeight); // vertical line
+
+        doc.setFont('helvetica', 'bold');
+        doc.text(labels[i], tableX + 2, y + 6);
+        doc.setFont('helvetica', 'normal');
+        doc.text(values[i], tableX + colWidth + 2, y + 6);
+    }
+
+    // Reason
+    const reasonY = tableY + labels.length * rowHeight + 10;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Reason:', tableX, reasonY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(details.reason, tableX + 15, reasonY, { maxWidth: 170 });
+
+    // Alterations Table
+    const alterY = reasonY + 15;
+    const alterColWidths = [60, 60, 50];
+    const alterHeaders = ['Date', 'Change Made', 'Approved By'];
 
     doc.setFont('helvetica', 'bold');
-    doc.text(`Subject: Application for ${details.leaveType}`, 20, 75);
+    let currentX = tableX;
+    alterHeaders.forEach((header, i) => {
+        doc.setFillColor(200, 220, 240);
+        doc.rect(currentX, alterY, alterColWidths[i], rowHeight, 'FD'); // header
+        doc.setTextColor('#2d3748');
+        doc.text(header, currentX + 2, alterY + 6);
+        currentX += alterColWidths[i];
+    });
+
     doc.setFont('helvetica', 'normal');
+    const emptyRows = 3;
+    for (let i = 1; i <= emptyRows; i++) {
+        const rowY = alterY + i * rowHeight;
+        currentX = tableX;
+        alterColWidths.forEach(width => {
+            doc.rect(currentX, rowY, width, rowHeight); // empty cells
+            currentX += width;
+        });
+    }
 
-    doc.text('Respected Sir/Madam,', 20, 85);
+    // Signatures
+    const signatureY = alterY + (emptyRows + 1) * rowHeight + 10;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Faculty Signature:', tableX, signatureY);
+    doc.text('Forwarded by HOD:', tableX + 70, signatureY);
+    doc.text('Approved by Principal:', tableX + 140, signatureY);
 
-    const body = `I, ${details.faculty.name}, ${details.faculty.designation} in the Department of ${details.faculty.dept} (Emp. ID: ${details.faculty.empId}), am writing to formally request a leave of absence.
+    doc.setFont('helvetica', 'normal');
+    doc.text('__________________', tableX, signatureY + 12);
+    doc.text('__________________', tableX + 70, signatureY + 12);
+    doc.text('__________________', tableX + 140, signatureY + 12);
 
-I would like to apply for ${details.leaveType} from ${details.startDate} to ${details.endDate}.
-
-The reason for my leave is as follows:
-${details.reason}
-
-I have made the necessary arrangements for my duties and responsibilities to be covered during my absence to ensure that work is not disrupted.
-
-I kindly request your approval for this leave. Thank you for your consideration.`;
-
-    doc.text(body, 20, 95, { maxWidth: 170 });
-    
-    doc.text('Sincerely,', 20, 165);
-    
-    doc.text(details.faculty.name, 20, 180);
-    doc.text(`(${details.faculty.designation})`, 20, 186);
-
+    // Save PDF
     doc.save(`leave_application_${details.faculty.empId}_${details.startDate}.pdf`);
 };

@@ -68,10 +68,10 @@ const Filters: React.FC<FiltersProps> = ({ filters, setters, departments }) => {
     return (
       <button
         onClick={() => handleDateRangeChange(range)}
-        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex-grow text-center ${
+        className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors flex-grow text-center ${
           isActive
-            ? 'bg-highlight text-primary dark:bg-teal-500 dark:text-gray-100'
-            : 'bg-accent text-text-secondary hover:bg-highlight/20 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+            ? 'bg-highlight text-white shadow-md'
+            : 'text-text-secondary hover:bg-accent dark:text-gray-300 dark:hover:bg-dark-accent/50'
         }`}
       >
         {children}
@@ -83,11 +83,11 @@ const Filters: React.FC<FiltersProps> = ({ filters, setters, departments }) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
       <div className="md:col-span-1">
         <label className="block text-sm font-medium text-text-secondary dark:text-gray-400 mb-2">Date Range</label>
-        <div className="flex items-center gap-1 bg-primary p-1 rounded-lg dark:bg-gray-900/50 border border-transparent dark:border-gray-700">
+        <div className="flex items-center gap-1 bg-primary p-1 rounded-lg dark:bg-dark-primary/50 border border-accent dark:border-dark-accent">
           <DateButton range="today">Today</DateButton>
-          <DateButton range="week">This Week</DateButton>
-          <DateButton range="month">This Month</DateButton>
-          <DateButton range="all">All Time</DateButton>
+          <DateButton range="week">Week</DateButton>
+          <DateButton range="month">Month</DateButton>
+          <DateButton range="all">All</DateButton>
         </div>
       </div>
       <div>
@@ -96,7 +96,7 @@ const Filters: React.FC<FiltersProps> = ({ filters, setters, departments }) => {
           id="dept-filter"
           value={filters.department}
           onChange={(e) => setters.setDepartmentFilter(e.target.value)}
-          className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 text-text-primary focus:outline-none focus:ring-highlight focus:border-highlight disabled:bg-accent disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-teal-400 dark:focus:border-teal-400"
+          className="mt-1 block w-full bg-primary border border-accent rounded-lg shadow-sm py-2 px-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-highlight focus:border-highlight disabled:bg-accent disabled:cursor-not-allowed dark:bg-dark-secondary dark:border-dark-accent dark:text-gray-200"
         >
           {departments.map(dept => (
             <option key={dept} value={dept}>{dept === 'all' ? 'All Departments' : dept}</option>
@@ -111,7 +111,7 @@ const Filters: React.FC<FiltersProps> = ({ filters, setters, departments }) => {
           placeholder="Search name..."
           value={filters.facultyName}
           onChange={(e) => setters.setFacultyNameFilter(e.target.value)}
-          className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 text-text-primary focus:outline-none focus:ring-highlight focus:border-highlight disabled:bg-accent disabled:cursor-not-allowed dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:focus:ring-teal-400 dark:focus:border-teal-400"
+          className="mt-1 block w-full bg-primary border border-accent rounded-lg shadow-sm py-2 px-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-highlight focus:border-highlight disabled:bg-accent disabled:cursor-not-allowed dark:bg-dark-secondary dark:border-dark-accent dark:text-gray-200"
         />
       </div>
     </div>

@@ -101,14 +101,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-primary dark:bg-gray-900 p-4 font-sans relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-primary dark:bg-dark-primary p-4 font-sans relative">
       <div className="absolute top-4 right-4">
         <ThemeToggle theme={theme} onToggle={onThemeToggle} />
       </div>
 
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-highlight dark:text-teal-300">
+          <h1 className="text-3xl font-bold text-highlight dark:text-teal-400">
             ACT HR Management
           </h1>
           <p className="text-text-secondary dark:text-gray-400">
@@ -116,7 +116,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
           </p>
         </div>
 
-        <div className="p-8 space-y-6 bg-secondary rounded-xl shadow-lg dark:bg-gray-800">
+        <div className="p-8 space-y-6 bg-secondary rounded-xl shadow-lg dark:bg-dark-secondary">
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">
@@ -127,7 +127,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                className="mt-1 block w-full bg-primary border border-accent rounded-lg shadow-sm py-2 px-3 dark:bg-dark-primary dark:border-dark-accent dark:text-gray-200 focus:ring-2 focus:ring-highlight"
               />
             </div>
 
@@ -140,19 +140,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                className="mt-1 block w-full bg-primary border border-accent rounded-lg shadow-sm py-2 px-3 dark:bg-dark-primary dark:border-dark-accent dark:text-gray-200 focus:ring-2 focus:ring-highlight"
               />
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+              <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 p-3 rounded-lg">
                 <AlertTriangle size={16} />
                 <span>{error}</span>
               </div>
             )}
             
             {successMessage && !error && (
-              <div className="flex items-start gap-2 text-sm text-green-600 dark:text-green-400">
+              <div className="flex items-start gap-2 text-sm text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/40 p-3 rounded-lg">
                 <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
                 <span>{successMessage}</span>
               </div>
@@ -162,7 +162,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2 px-4 flex items-center justify-center gap-2 rounded-md bg-highlight text-primary dark:bg-teal-500 disabled:opacity-50"
+                className="w-full py-2.5 px-4 flex items-center justify-center gap-2 rounded-lg bg-highlight text-white font-semibold hover:bg-teal-700 dark:hover:bg-teal-500 transition-colors disabled:opacity-50"
               >
                 {loading ? <Loader2 className="animate-spin" /> : <KeyRound size={18} />}
                 Sign In
@@ -171,7 +171,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
           </form>
            <div className="mt-4 text-center text-sm text-text-secondary dark:text-gray-400">
                 {settings.accountCreationEnabled && (
-                    <button onClick={onGoToRegister} className="text-highlight hover:underline dark:text-teal-300">
+                    <button onClick={onGoToRegister} className="text-highlight hover:underline dark:text-teal-400 font-medium">
                         Faculty Registration
                     </button>
                 )}
@@ -179,7 +179,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
                     <span className="mx-2">|</span>
                 )}
                 {settings.userAccountRequestEnabled && (
-                    <button onClick={onGoToAdminRegister} className="text-highlight hover:underline dark:text-teal-300">
+                    <button onClick={onGoToAdminRegister} className="text-highlight hover:underline dark:text-teal-400 font-medium">
                         Request User Account
                     </button>
                 )}

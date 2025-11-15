@@ -12,13 +12,28 @@
         theme: {
           extend: {
             colors: {
-              'primary': '#f7fafc',
+              'primary': '#f8fafc', // slate-50
               'secondary': '#ffffff',
-              'accent': '#e2e8f0',
-              'highlight': '#38b2ac',
-              'text-primary': '#2d3748',
-              'text-secondary': '#718096',
+              'accent': '#f1f5f9', // slate-100
+              'highlight': '#0d9488', // teal-600
+              'text-primary': '#0f172a', // slate-900
+              'text-secondary': '#64748b', // slate-500
+              'dark-primary': '#0f172a', // slate-900
+              'dark-secondary': '#1e293b', // slate-800
+              'dark-accent': '#334155', // slate-700
             },
+            borderRadius: {
+              'lg': '0.75rem',
+              'xl': '1rem',
+            },
+            boxShadow: {
+              'lg': '0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.07)',
+              'xl': '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+            },
+            ringOffsetColor: {
+              'primary': '#ffffff',
+              'dark': '#1e293b',
+            }
           },
         },
       }
@@ -42,7 +57,7 @@
 }
 </script>
 </head>
-  <body class="bg-primary text-text-primary dark:bg-gray-900 dark:text-gray-100">
+  <body class="bg-primary text-text-primary dark:bg-dark-primary dark:text-slate-200">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
