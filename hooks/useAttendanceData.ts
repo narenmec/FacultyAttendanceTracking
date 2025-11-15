@@ -135,16 +135,24 @@ export const useAttendanceData = () => {
         const data = e.target?.result;
         if (!data) throw new Error("File is empty or unreadable");
         const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
         
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 1 });
-        
-        if (jsonData.length === 0) {
-            throw new Error("Excel sheet is empty or has no data.");
+        let allProcessedData: AttendanceRecord[] = [];
+        if (workbook.SheetNames.length === 0) {
+            throw new Error("The Excel file contains no sheets.");
+        }
+
+        for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 1 });
+            if (jsonData.length > 0) {
+                const sheetData = processRawData(jsonData, date, settings.onTimeThreshold);
+                allProcessedData = allProcessedData.concat(sheetData);
+            }
         }
         
-        const processedData = processRawData(jsonData, date, settings.onTimeThreshold);
+        if (allProcessedData.length === 0) {
+            throw new Error("No data found in any of the Excel sheets.");
+        }
 
         const facultyRef = db.ref('faculty');
         const facultySnapshot = await facultyRef.get();
@@ -156,7 +164,7 @@ export const useAttendanceData = () => {
         const validRecords: AttendanceRecord[] = [];
         const invalidEmpIds = new Set<number>();
 
-        processedData.forEach(record => {
+        allProcessedData.forEach(record => {
             if (validEmpIds.has(String(record.empId))) {
                 validRecords.push(record);
             } else {

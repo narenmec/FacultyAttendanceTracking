@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { db } from '../firebase/config';
@@ -131,16 +132,27 @@ export const useFacultyData = () => {
         const data = e.target?.result;
         if (!data) throw new Error("File is empty");
         const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
         
-        if (jsonData.length === 0) throw new Error("Excel sheet is empty.");
+        let allProcessedData: FacultyRecord[] = [];
+        if (workbook.SheetNames.length === 0) {
+            throw new Error("The Excel file contains no sheets.");
+        }
         
-        const processedData = processRawFacultyData(jsonData);
+        for (const sheetName of workbook.SheetNames) {
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            if (jsonData.length > 0) {
+                const sheetData = processRawFacultyData(jsonData);
+                allProcessedData = allProcessedData.concat(sheetData);
+            }
+        }
+        
+        if (allProcessedData.length === 0) {
+            throw new Error("No data found in any of the Excel sheets.");
+        }
         
         const updates: { [key: string]: any } = {};
-        processedData.forEach((faculty) => {
+        allProcessedData.forEach((faculty) => {
             const path = `/faculty/${faculty.empId}`;
             const { empId, ...facultyData } = faculty;
             updates[path] = facultyData;
