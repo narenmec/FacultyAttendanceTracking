@@ -1,12 +1,13 @@
-
 import { useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase/config.ts';
-import { FacultyRecord } from '../types.ts';
+import { db } from '../firebase/config';
+import { FacultyRecord } from '../types';
 
 interface UserAccount {
   username: string;
   password?: string;
 }
+
+const encodeEmailForKey = (email: string) => email.replace(/\./g, ',');
 
 export const useUserManagementData = () => {
   const [pendingUsers, setPendingUsers] = useState<UserAccount[]>([]);
@@ -81,8 +82,9 @@ export const useUserManagementData = () => {
   const approveUser = useCallback(async (user: UserAccount) => {
     setError(null);
     try {
-      const userRef = db.ref(`users/${user.username}`);
-      const pendingRef = db.ref(`pendingUsers/${user.username}`);
+      const encodedUsername = encodeEmailForKey(user.username);
+      const userRef = db.ref(`users/${encodedUsername}`);
+      const pendingRef = db.ref(`pendingUsers/${encodedUsername}`);
 
       await userRef.set({
         username: user.username,
@@ -104,7 +106,8 @@ export const useUserManagementData = () => {
   const rejectUser = useCallback(async (username: string) => {
     setError(null);
     try {
-      const pendingRef = db.ref(`pendingUsers/${username}`);
+      const encodedUsername = encodeEmailForKey(username);
+      const pendingRef = db.ref(`pendingUsers/${encodedUsername}`);
       await pendingRef.remove();
       setPendingUsers((prev) => prev.filter((p) => p.username !== username));
     } catch (err) {
@@ -118,8 +121,9 @@ export const useUserManagementData = () => {
   const changeUserPassword = useCallback(async (username: string, newPassword: string, oldPassword?: string) => {
     setError(null);
     try {
+        const encodedUsername = encodeEmailForKey(username);
         // First, check if it's a general user (e.g., admin, dean)
-        const userRef = db.ref(`users/${username}`);
+        const userRef = db.ref(`users/${encodedUsername}`);
         const userSnapshot = await userRef.get();
 
         if (userSnapshot.exists()) {

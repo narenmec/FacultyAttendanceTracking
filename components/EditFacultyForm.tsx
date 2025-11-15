@@ -1,6 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
-import { FacultyRecord } from '../types.ts';
+import { FacultyRecord } from '../types';
 import { Search, Edit } from 'lucide-react';
 
 interface EditFacultyFormProps {

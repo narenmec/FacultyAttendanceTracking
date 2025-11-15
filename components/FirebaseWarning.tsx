@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { firebaseConfig } from '../firebase/config.ts';
+import { firebaseConfig } from '../firebase/config';
 
 const FirebaseWarning: React.FC = () => {
   const isConfigured = firebaseConfig.apiKey !== 'YOUR_API_KEY' && firebaseConfig.projectId !== 'YOUR_PROJECT_ID';

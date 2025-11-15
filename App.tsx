@@ -1,20 +1,19 @@
-
 import React, { useState, useEffect } from 'react';
-import Dashboard from './components/Dashboard.tsx';
-import UploadPage from './components/UploadPage.tsx';
-import FacultyPage from './components/FacultyPage.tsx';
-import SummaryPage from './components/SummaryPage.tsx';
-import SettingsPage from './components/SettingsPage.tsx';
-import FacultyDetailPage from './components/FacultyDetailPage.tsx';
-import LoginPage from './components/LoginPage.tsx';
-import UserManagementPage from './components/UserManagementPage.tsx';
-import FacultyRegistrationPage from './components/FacultyRegistrationPage.tsx';
-import AdminRegistrationPage from './components/AdminRegistrationPage.tsx';
-import FacultyDashboard from './components/FacultyDashboard.tsx';
-import LeaveApprovalPage from './components/LeaveApprovalPage.tsx';
-import { useAttendanceData } from './hooks/useAttendanceData.ts';
+import Dashboard from './components/Dashboard';
+import UploadPage from './components/UploadPage';
+import FacultyPage from './components/FacultyPage';
+import SummaryPage from './components/SummaryPage';
+import SettingsPage from './components/SettingsPage';
+import FacultyDetailPage from './components/FacultyDetailPage';
+import LoginPage from './components/LoginPage';
+import UserManagementPage from './components/UserManagementPage';
+import FacultyRegistrationPage from './components/FacultyRegistrationPage';
+import AdminRegistrationPage from './components/AdminRegistrationPage';
+import FacultyDashboard from './components/FacultyDashboard';
+import LeaveApprovalPage from './components/LeaveApprovalPage';
+import { useAttendanceData } from './hooks/useAttendanceData';
 import { LayoutDashboard, Upload, Users, Sheet, Settings as SettingsIcon, LogOut, UserCog, CalendarCheck } from 'lucide-react';
-import ThemeToggle from './components/ThemeToggle.tsx';
+import ThemeToggle from './components/ThemeToggle';
 
 type User = {
     username: string;

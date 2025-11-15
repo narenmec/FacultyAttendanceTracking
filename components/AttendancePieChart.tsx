@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ChartData, AttendanceStatus } from '../types.ts';
+import { ChartData, AttendanceStatus } from '../types';
 
 interface AttendancePieChartProps {
   data: ChartData[];

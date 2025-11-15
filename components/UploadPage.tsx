@@ -1,7 +1,7 @@
 
 import React from 'react';
-import FileUpload from './FileUpload.tsx';
-import { useAttendanceData } from '../hooks/useAttendanceData.ts';
+import FileUpload from './FileUpload';
+import { useAttendanceData } from '../hooks/useAttendanceData';
 import { FileUp } from 'lucide-react';
 
 type UploadPageProps = Pick<

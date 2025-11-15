@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
-import { useLeaveApprovalData } from '../hooks/useLeaveApprovalData.ts';
-import { LeaveApplicationRecord, LeaveStatus } from '../types.ts';
+import { useLeaveApprovalData } from '../hooks/useLeaveApprovalData';
+import { LeaveApplicationRecord, LeaveStatus } from '../types';
 import { Loader2, AlertTriangle, RefreshCw, CheckCircle, XCircle, Clock, Search, Inbox } from 'lucide-react';
 
 const LeaveApprovalPage: React.FC = () => {

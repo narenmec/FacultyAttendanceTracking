@@ -1,12 +1,14 @@
 
+
 import React, { useState } from 'react';
-import { useFacultyData } from '../hooks/useFacultyData.ts';
-import FacultyTable from './FacultyTable.tsx';
-import FacultyFileUpload from './FacultyFileUpload.tsx';
-import EditFacultyForm from './EditFacultyForm.tsx';
-import ManualAttendance from './ManualAttendance.tsx';
-import { UserPlus, UploadCloud, Edit, List, ClipboardCheck, AlertTriangle } from 'lucide-react';
-import { FacultyRecord } from '../types.ts';
+import { useFacultyData } from '../hooks/useFacultyData';
+import FacultyTable from './FacultyTable';
+import FacultyFileUpload from './FacultyFileUpload';
+import EditFacultyForm from './EditFacultyForm';
+import ManualAttendance from './ManualAttendance';
+import AdminLeaveManagement from './AdminLeaveManagement';
+import { UserPlus, UploadCloud, Edit, List, ClipboardCheck, AlertTriangle, CalendarPlus } from 'lucide-react';
+import { FacultyRecord } from '../types';
 
 interface FacultyPageProps {
   theme: 'light' | 'dark';
@@ -15,7 +17,7 @@ interface FacultyPageProps {
 
 const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => {
   const { facultyList, loading, error, addFaculty, handleFileUpload, updateFaculty, deleteFaculty, clearError } = useFacultyData();
-  const [activeTab, setActiveTab] = useState<'view' | 'add' | 'upload' | 'edit' | 'manual'>('view');
+  const [activeTab, setActiveTab] = useState<'view' | 'add' | 'upload' | 'edit' | 'manual' | 'leave'>('view');
   
   const [newFaculty, setNewFaculty] = useState({
       empId: '', name: '', dept: '', designation: '', salary: '', casualLeaves: ''
@@ -117,6 +119,8 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
         );
       case 'manual':
         return <ManualAttendance />;
+      case 'leave':
+        return <AdminLeaveManagement facultyList={facultyList} />;
       default:
         return null;
     }
@@ -127,7 +131,8 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
     add: 'Add New Faculty',
     upload: 'Bulk Upload from Excel',
     edit: 'Edit Faculty Details',
-    manual: 'Manual Attendance Marking'
+    manual: 'Manual Attendance Marking',
+    leave: 'Leave Management'
   };
 
   return (
@@ -151,10 +156,11 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
                 <TabButton tabName="upload"><UploadCloud size={16} /> Bulk Upload</TabButton>
                 <TabButton tabName="edit"><Edit size={16} /> Edit Details</TabButton>
                 <TabButton tabName="manual"><ClipboardCheck size={16} /> Manual Attendance</TabButton>
+                <TabButton tabName="leave"><CalendarPlus size={16} /> Leave Management</TabButton>
             </nav>
         </div>
         <div className="relative">
-            {loading && activeTab !== 'edit' && activeTab !== 'manual' && (
+            {loading && activeTab !== 'edit' && activeTab !== 'manual' && activeTab !== 'leave' && (
                 <div className="absolute inset-0 bg-primary/50 dark:bg-gray-900/50 flex items-center justify-center z-10 rounded-lg">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-highlight dark:border-teal-300"></div>
                 </div>

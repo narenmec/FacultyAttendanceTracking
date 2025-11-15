@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { useHolidays } from '../hooks/useHolidays.ts';
-import { Holiday } from '../types.ts';
+import { useHolidays } from '../hooks/useHolidays';
+import { Holiday } from '../types';
 import { Loader2, Plus, Calendar, Edit2, Trash2, X, AlertTriangle } from 'lucide-react';
 
-// FIX: Changed to a function declaration with an explicit return type to fix incorrect type inference.
-export default function HolidayManagement(): JSX.Element {
+const HolidayManagement: React.FC = () => {
     const { holidays, loading, error, addHoliday, updateHoliday, deleteHoliday, clearError } = useHolidays();
     const [newHoliday, setNewHoliday] = useState({ date: '', description: '' });
     const [isAdding, setIsAdding] = useState(false);
@@ -151,4 +150,6 @@ export default function HolidayManagement(): JSX.Element {
             )}
         </div>
     );
-}
+};
+
+export default HolidayManagement;

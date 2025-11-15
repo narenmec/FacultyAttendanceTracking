@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Wrench, Calendar, Gift, Undo2 } from 'lucide-react';
-import MonthlyActions from './MonthlyActions.tsx';
-import LopReversal from './LopReversal.tsx';
-import GeneralSettings from './GeneralSettings.tsx';
-import HolidayManagement from './HolidayManagement.tsx';
+import MonthlyActions from './MonthlyActions';
+import LopReversal from './LopReversal';
+import GeneralSettings from './GeneralSettings';
+import HolidayManagement from './HolidayManagement';
 
 type ActiveTab = 'general' | 'holidays' | 'monthly' | 'lop';
 

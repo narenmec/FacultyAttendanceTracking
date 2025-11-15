@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { AttendanceRecord, AttendanceStatus } from '../types.ts';
+import { AttendanceRecord, AttendanceStatus } from '../types';
 
 interface CalendarViewProps {
   attendanceData: AttendanceRecord[];

@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import { db } from '../firebase/config.ts';
-import { FacultyRecord, AttendanceRecord, AttendanceStatus } from '../types.ts';
+import { db } from '../firebase/config';
+import { FacultyRecord, AttendanceRecord, AttendanceStatus } from '../types';
 import { Calendar, Loader2 } from 'lucide-react';
 
 type FacultyWithAttendance = FacultyRecord & {

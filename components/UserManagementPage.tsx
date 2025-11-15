@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
-import { useUserManagementData } from '../hooks/useUserManagementData.ts';
-import { useSettings } from './SettingsContext.tsx';
+import { useUserManagementData } from '../hooks/useUserManagementData';
+import { useSettings } from './SettingsContext';
 import { Loader2, UserCheck, UserX, AlertTriangle, RefreshCw, CheckCircle, ShieldCheck, Users, Edit, Search, KeyRound, Cog, UserRoundX } from 'lucide-react';
-import { FacultyRecord } from '../types.ts';
+import { FacultyRecord } from '../types';
 
 interface UserAccount {
     username: string;

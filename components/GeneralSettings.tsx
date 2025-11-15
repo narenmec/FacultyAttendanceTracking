@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useSettings } from './SettingsContext.tsx';
+import { useSettings } from './SettingsContext';
 import { Save, Loader2 } from 'lucide-react';
 
 const GeneralSettings: React.FC = () => {

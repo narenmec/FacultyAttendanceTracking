@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import { db } from '../firebase/config.ts';
+import { db } from '../firebase/config';
 import { UserPlus, Loader2, KeyRound, ArrowLeft } from 'lucide-react';
-import ThemeToggle from './ThemeToggle.tsx';
+import ThemeToggle from './ThemeToggle';
 
 interface AdminRegistrationPageProps {
   onRegistrationRequestSuccess: () => void;
@@ -10,6 +9,8 @@ interface AdminRegistrationPageProps {
   theme: 'light' | 'dark';
   onThemeToggle: () => void;
 }
+
+const encodeEmailForKey = (email: string) => email.replace(/\./g, ',');
 
 const AdminRegistrationPage: React.FC<AdminRegistrationPageProps> = ({ onRegistrationRequestSuccess, onBackToLogin, theme, onThemeToggle }) => {
   const [username, setUsername] = useState('');
@@ -36,9 +37,10 @@ const AdminRegistrationPage: React.FC<AdminRegistrationPageProps> = ({ onRegistr
 
     try {
       const cleanUsername = username.trim();
+      const encodedUsername = encodeEmailForKey(cleanUsername);
       // Check if username already exists in pending, users, or faculty
-      const pendingRef = db.ref(`pendingUsers/${cleanUsername}`);
-      const userRef = db.ref(`users/${cleanUsername}`);
+      const pendingRef = db.ref(`pendingUsers/${encodedUsername}`);
+      const userRef = db.ref(`users/${encodedUsername}`);
       // FIX: Fetch all faculty and check locally to avoid needing an index.
       const facultyRef = db.ref('faculty');
 

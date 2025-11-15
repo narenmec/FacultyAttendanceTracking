@@ -1,6 +1,5 @@
-
 import * as XLSX from 'xlsx';
-import { MonthlySummary } from '../types.ts';
+import { MonthlySummary } from '../types';
 
 export const generateSummaryCSV = (data: MonthlySummary[], month: string) => {
   // 1. Prepare data for the worksheet, ensuring a specific order of columns

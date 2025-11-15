@@ -1,7 +1,6 @@
-
 import { useState, useCallback } from 'react';
-import { db } from '../firebase/config.ts';
-import { FacultyRecord, AttendanceRecord, AttendanceStatus } from '../types.ts';
+import { db } from '../firebase/config';
+import { FacultyRecord, AttendanceRecord, AttendanceStatus } from '../types';
 
 export interface FacultyWithLop {
   empId: number;

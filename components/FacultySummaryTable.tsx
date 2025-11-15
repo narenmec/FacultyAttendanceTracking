@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { FacultySummaryRecord } from '../types.ts';
+import { FacultySummaryRecord } from '../types';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface FacultySummaryTableProps {

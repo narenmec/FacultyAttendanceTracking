@@ -1,9 +1,9 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import * as XLSX from 'xlsx';
-import { db } from '../firebase/config.ts';
-import { AttendanceRecord, AttendanceStatus, FacultySummaryRecord } from '../types.ts';
-import { useSettings } from '../components/SettingsContext.tsx';
+import { db } from '../firebase/config';
+import { AttendanceRecord, AttendanceStatus, FacultySummaryRecord } from '../types';
+import { useSettings } from '../components/SettingsContext';
 
 const processRawData = (jsonData: any[], date: string, onTimeThreshold: string): AttendanceRecord[] => {
   return jsonData.map((row, index) => {

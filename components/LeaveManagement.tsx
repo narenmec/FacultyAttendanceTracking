@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
-import { db } from '../firebase/config.ts';
-import { FacultyRecord, AttendanceStatus, LeaveApplicationRecord } from '../types.ts';
-import { generateLeaveApplicationPDF, LeaveApplicationDetails } from '../utils/pdfGenerator.ts';
+import { db } from '../firebase/config';
+import { FacultyRecord, AttendanceStatus, LeaveApplicationRecord } from '../types';
+import { generateLeaveApplicationPDF, LeaveApplicationDetails } from '../utils/pdfGenerator';
 import { Wallet, CalendarX, FileText, Send, Loader2, FileDown, CheckCircle } from 'lucide-react';
 
 interface LeaveManagementProps {

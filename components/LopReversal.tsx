@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { useLopReversalData, FacultyWithLop } from '../hooks/useLopReversalData.ts';
+import { useLopReversalData, FacultyWithLop } from '../hooks/useLopReversalData';
 import { Undo2, Calendar, Briefcase, ChevronDown, ChevronUp, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const LopReversal: React.FC = () => {

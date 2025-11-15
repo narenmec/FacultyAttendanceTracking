@@ -1,15 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
-import { db } from '../firebase/config.ts';
-import { KeyRound, Loader2, AlertTriangle, UserPlus, CheckCircle } from 'lucide-react';
-import ThemeToggle from './ThemeToggle.tsx';
-import { FacultyRecord } from '../types.ts';
-import { useSettings } from './SettingsContext.tsx';
-
-interface UserAccount {
-  username: string;
-  password?: string; // This is base64 encoded
-}
+import { db } from '../firebase/config';
+import { KeyRound, Loader2, AlertTriangle, Info, UserPlus, CheckCircle } from 'lucide-react';
+import ThemeToggle from './ThemeToggle';
+import { FacultyRecord } from '../types';
+import { useSettings } from './SettingsContext';
 
 interface LoginPageProps {
   onLoginSuccess: (user: { username: string; role: 'admin' | 'faculty'; empId?: number }) => void;
@@ -20,63 +14,87 @@ interface LoginPageProps {
   onThemeToggle: () => void;
 }
 
+const encodeEmailForKey = (email: string) => email.replace(/\./g, ',');
+
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, onGoToAdminRegister, successMessage, theme, onThemeToggle }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [localSuccessMessage, setLocalSuccessMessage] = useState(successMessage);
-  const { settings, loading: settingsLoading } = useSettings();
+  const [loading, setLoading] = useState(false);
+  const [allFaculty, setAllFaculty] = useState<FacultyRecord[]>([]);
+  const { settings } = useSettings();
 
   useEffect(() => {
-    if (successMessage) {
-      setLocalSuccessMessage(successMessage);
-      const timer = setTimeout(() => {
-        setLocalSuccessMessage('');
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
+    // Fetch all faculty records once on component mount for login check
+    const fetchFaculty = async () => {
+        setLoading(true);
+        try {
+            const facultyRef = db.ref('faculty');
+            const snapshot = await facultyRef.get();
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                const list: FacultyRecord[] = Object.keys(data).map(empId => ({
+                    empId: parseInt(empId),
+                    ...data[empId]
+                }));
+                setAllFaculty(list);
+            }
+        } catch (err) {
+            console.error("Error fetching faculty for login:", err);
+            setError("Could not connect to the database to verify users.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    fetchFaculty();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username || !password) {
+      setError("Username and password are required.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // 1. Check for admin/general user
-      const userRef = db.ref(`users/${username}`);
+      const cleanUsername = username.trim();
+      const encodedUsername = encodeEmailForKey(cleanUsername);
+      
+      // 1. Check for any approved general user (admin, dean, etc.)
+      const userRef = db.ref(`users/${encodedUsername}`);
       const userSnapshot = await userRef.get();
-
-      if (userSnapshot.exists()) {
-        const userData: UserAccount = {username, ...userSnapshot.val()};
-        if (userData.password && atob(userData.password) === password) {
-          onLoginSuccess({ username: userData.username, role: 'admin' });
-          return;
-        }
-      }
-
-      // 2. Check for faculty user
-      const facultyRef = db.ref('faculty');
-      const facultySnapshot = await facultyRef.get();
-      if (facultySnapshot.exists()) {
-        const facultyData = facultySnapshot.val();
-        for (const empId in facultyData) {
-          const faculty: FacultyRecord = { empId: parseInt(empId), ...facultyData[empId] };
-          if (faculty.username === username) {
-            if (faculty.password && atob(faculty.password) === password) {
-              onLoginSuccess({ username: faculty.username, role: 'faculty', empId: faculty.empId });
+      if (userSnapshot.exists() && userSnapshot.val().password) {
+          if (atob(userSnapshot.val().password) === password) {
+              onLoginSuccess({ username: cleanUsername, role: 'admin' });
               return;
-            }
           }
-        }
       }
 
-      // 3. If no match found
-      throw new Error("Invalid username or password.");
+      // 2. Check for Faculty
+      const facultyUser = allFaculty.find(f => f.username === cleanUsername && f.registered);
+      if (facultyUser) {
+          if (facultyUser.password && atob(facultyUser.password) === password) {
+              onLoginSuccess({ username: facultyUser.username!, role: 'faculty', empId: facultyUser.empId });
+              return;
+          }
+      }
+      
+      // 3. If no user found, check pending users for a helpful message
+      const pendingRef = db.ref(`pendingUsers/${encodedUsername}`);
+      const pendingSnapshot = await pendingRef.get();
+      if (pendingSnapshot.exists()) {
+        setError("Your account is pending approval by an administrator.");
+        return;
+      }
+      
+      setError('Invalid username or password.');
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred during login.");
+      console.error("Login error:", err);
+      setError("An error occurred during login. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -87,80 +105,94 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegister, o
       <div className="absolute top-4 right-4">
         <ThemeToggle theme={theme} onToggle={onThemeToggle} />
       </div>
+
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="mx-auto h-16 w-16 text-highlight dark:text-teal-300 bg-highlight/10 rounded-full flex items-center justify-center">
-            <KeyRound size={32} />
-          </div>
-          <h1 className="mt-4 text-3xl font-bold text-highlight dark:text-teal-300">
-            ACT HR Portal
+          <h1 className="text-3xl font-bold text-highlight dark:text-teal-300">
+            ACT HR Management
           </h1>
-          <p className="text-text-secondary dark:text-gray-400">Please sign in to continue</p>
+          <p className="text-text-secondary dark:text-gray-400">
+            Please sign in to continue
+          </p>
         </div>
 
-        <div className="p-8 bg-secondary rounded-xl shadow-lg dark:bg-gray-800">
-          {error && (
-            <div className="mb-4 flex items-start gap-2 p-3 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-900/50 dark:text-red-300">
-              <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-          {localSuccessMessage && (
-            <div className="mb-4 flex items-start gap-2 p-3 text-sm text-green-700 bg-green-100 rounded-lg dark:bg-green-900/50 dark:text-green-300">
-              <CheckCircle size={18} className="flex-shrink-0 mt-0.5" />
-              <span>{localSuccessMessage}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
+        <div className="p-8 space-y-6 bg-secondary rounded-xl shadow-lg dark:bg-gray-800">
+          <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">Username</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">
+                Username
+              </label>
               <input
                 type="text"
+                required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                required
-                className="mt-1 w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 focus:ring-highlight focus:border-highlight"
+                className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
               />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">Password</label>
+              <label className="block text-sm font-medium text-text-secondary dark:text-gray-400">
+                Password
+              </label>
               <input
                 type="password"
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className="mt-1 w-full bg-primary border border-accent rounded-md p-2 dark:bg-gray-700 dark:border-gray-600 focus:ring-highlight focus:border-highlight"
+                className="mt-1 block w-full bg-primary border border-accent rounded-md shadow-sm py-2 px-3 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
               />
             </div>
-            <div className="pt-2">
+
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400">
+                <AlertTriangle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
+            
+            {successMessage && !error && (
+              <div className="flex items-start gap-2 text-sm text-green-600 dark:text-green-400">
+                <CheckCircle size={16} className="mt-0.5 flex-shrink-0" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3 pt-2">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center gap-2 bg-highlight text-primary font-bold py-2 px-4 rounded-md hover:bg-teal-300 disabled:bg-gray-500 transition-colors"
+                className="w-full py-2 px-4 flex items-center justify-center gap-2 rounded-md bg-highlight text-primary dark:bg-teal-500 disabled:opacity-50"
               >
-                {loading ? <Loader2 className="animate-spin" /> : 'Login'}
+                {loading ? <Loader2 className="animate-spin" /> : <KeyRound size={18} />}
+                Sign In
               </button>
             </div>
           </form>
-
-          {(settings.accountCreationEnabled || settings.userAccountRequestEnabled) && !settingsLoading && (
-            <div className="mt-6 text-center text-sm">
-                <p className="text-text-secondary dark:text-gray-400">Don't have an account?</p>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center mt-2">
-                    {settings.accountCreationEnabled && (
-                        <button onClick={onGoToRegister} className="flex items-center justify-center gap-2 text-highlight hover:underline dark:text-teal-400">
-                            <UserPlus size={16}/> Register as Faculty
-                        </button>
-                    )}
-                    {settings.userAccountRequestEnabled && (
-                         <button onClick={onGoToAdminRegister} className="flex items-center justify-center gap-2 text-highlight hover:underline dark:text-teal-400">
-                            <UserPlus size={16}/> Request Admin Account
-                        </button>
-                    )}
-                </div>
+           <div className="mt-4 text-center text-sm text-text-secondary dark:text-gray-400">
+                {settings.accountCreationEnabled && (
+                    <button onClick={onGoToRegister} className="text-highlight hover:underline dark:text-teal-300">
+                        Faculty Registration
+                    </button>
+                )}
+                 {settings.accountCreationEnabled && settings.userAccountRequestEnabled && (
+                    <span className="mx-2">|</span>
+                )}
+                {settings.userAccountRequestEnabled && (
+                    <button onClick={onGoToAdminRegister} className="text-highlight hover:underline dark:text-teal-300">
+                        Request User Account
+                    </button>
+                )}
             </div>
-          )}
+        </div>
+
+        <div className="mt-6 p-4 bg-blue-100 dark:bg-blue-900/50 rounded-lg text-sm text-blue-800 dark:text-blue-300 flex gap-3">
+          <Info size={18} className="flex-shrink-0 mt-0.5" />
+          <div>
+            <p>
+              Admins and other general users must use the provided credentials or request an account for approval.
+            </p>
+          </div>
         </div>
       </div>
     </div>

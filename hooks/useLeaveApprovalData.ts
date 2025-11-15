@@ -1,7 +1,6 @@
-
 import { useState, useCallback, useEffect } from 'react';
-import { db } from '../firebase/config.ts';
-import { LeaveApplicationRecord } from '../types.ts';
+import { db } from '../firebase/config';
+import { LeaveApplicationRecord } from '../types';
 
 export const useLeaveApprovalData = () => {
   const [leaveApplications, setLeaveApplications] = useState<LeaveApplicationRecord[]>([]);
