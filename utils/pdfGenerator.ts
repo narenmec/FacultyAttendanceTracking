@@ -214,26 +214,30 @@ export interface LeaveApplicationDetails {
 export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) => {
     const doc = new jsPDF();
 
-    // Header
+    // Date formatting function
+    function formatDate(date: Date): string {
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    }
+
+    // Header (all black)
     doc.setFontSize(18);
-    doc.setTextColor('#38b2ac');
+    doc.setTextColor('#000000');
     doc.text('Agni College of Technology', 105, 10, { align: 'center' });
     doc.setFontSize(14);
-    doc.setTextColor('#2d3748');
     doc.text('Thalambur, Chennai', 105, 17, { align: 'center' });
     doc.setFontSize(16);
-    doc.setTextColor('#1a202c');
     doc.text('Faculty Leave Application Form', 105, 25, { align: 'center' });
 
     // Metadata
     doc.setFontSize(11);
-    doc.setTextColor('#2d3748');
-    doc.text(`Submission Date: ${details.submissionTimestamp.toLocaleDateString()}`, 150, 35, { align: 'right' });
+    doc.text(`Submission Date: ${formatDate(details.submissionTimestamp)}`, 150, 35, { align: 'right' });
     doc.setFontSize(9);
-    doc.setTextColor('#718096');
     doc.text(`Application ID: ${details.applicationId}`, 150, 40, { align: 'right' });
 
-    // Combined Faculty & Leave Details
+    // Combined Faculty & Leave Details Table
     const labels = [
         'Faculty Name', 'Designation', 'Department', 'Employee ID',
         'Leave Type', 'From', 'To'
@@ -244,8 +248,8 @@ export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) =>
         details.faculty.dept,
         String(details.faculty.empId),
         details.leaveType,
-        details.startDate,
-        details.endDate
+        formatDate(new Date(details.startDate)),
+        formatDate(new Date(details.endDate))
     ];
 
     const tableX = 20;
@@ -260,8 +264,11 @@ export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) =>
         if (i > 0) doc.line(tableX, y, tableX + colWidth * 2, y); // horizontal line
         doc.line(tableX + colWidth, y, tableX + colWidth, y + rowHeight); // vertical line
 
+        // Bold left column label
         doc.setFont('helvetica', 'bold');
         doc.text(labels[i], tableX + 2, y + 6);
+
+        // Normal value
         doc.setFont('helvetica', 'normal');
         doc.text(values[i], tableX + colWidth + 2, y + 6);
     }
@@ -283,7 +290,6 @@ export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) =>
     alterHeaders.forEach((header, i) => {
         doc.setFillColor(200, 220, 240);
         doc.rect(currentX, alterY, alterColWidths[i], rowHeight, 'FD'); // header
-        doc.setTextColor('#2d3748');
         doc.text(header, currentX + 2, alterY + 6);
         currentX += alterColWidths[i];
     });
@@ -294,7 +300,7 @@ export const generateLeaveApplicationPDF = (details: LeaveApplicationDetails) =>
         const rowY = alterY + i * rowHeight;
         currentX = tableX;
         alterColWidths.forEach(width => {
-            doc.rect(currentX, rowY, width, rowHeight); // empty cells
+            doc.rect(currentX, rowY, width, rowHeight);
             currentX += width;
         });
     }

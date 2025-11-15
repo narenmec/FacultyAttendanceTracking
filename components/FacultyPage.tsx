@@ -1,6 +1,5 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useFacultyData } from '../hooks/useFacultyData';
 import FacultyTable from './FacultyTable';
 import FacultyFileUpload from './FacultyFileUpload';
@@ -18,6 +17,7 @@ interface FacultyPageProps {
 const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => {
   const { facultyList, loading, error, addFaculty, handleFileUpload, updateFaculty, deleteFaculty, clearError } = useFacultyData();
   const [activeTab, setActiveTab] = useState<'view' | 'add' | 'upload' | 'edit' | 'manual' | 'leave'>('view');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   
   const [newFaculty, setNewFaculty] = useState({
       empId: '', name: '', dept: '', designation: '', salary: '', casualLeaves: ''
@@ -26,6 +26,18 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [facultyToDelete, setFacultyToDelete] = useState<FacultyRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  const departments = useMemo(() => {
+    const depts = new Set(facultyList.map(f => f.dept));
+    return ['all', ...Array.from(depts)];
+  }, [facultyList]);
+  
+  const filteredFaculty = useMemo(() => {
+    if (departmentFilter === 'all') {
+        return facultyList;
+    }
+    return facultyList.filter(f => f.dept === departmentFilter);
+  }, [facultyList, departmentFilter]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -89,7 +101,24 @@ const FacultyPage: React.FC<FacultyPageProps> = ({ theme, onFacultySelect }) => 
   const renderContent = () => {
     switch (activeTab) {
       case 'view':
-        return <FacultyTable data={facultyList} onFacultySelect={onFacultySelect} onDeleteRequest={handleDeleteRequest} />;
+        return (
+          <div>
+            <div className="mb-4">
+              <label htmlFor="dept-filter-faculty" className="block text-sm font-medium text-text-secondary dark:text-gray-400">Filter by Department</label>
+              <select
+                id="dept-filter-faculty"
+                value={departmentFilter}
+                onChange={(e) => setDepartmentFilter(e.target.value)}
+                className="mt-1 block w-full max-w-xs bg-primary border border-accent rounded-lg shadow-sm py-2 px-3 text-text-primary focus:outline-none focus:ring-2 focus:ring-highlight focus:border-highlight dark:bg-dark-secondary dark:border-dark-accent dark:text-gray-200"
+              >
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>{dept === 'all' ? 'All Departments' : dept}</option>
+                ))}
+              </select>
+            </div>
+            <FacultyTable data={filteredFaculty} onFacultySelect={onFacultySelect} onDeleteRequest={handleDeleteRequest} />
+          </div>
+        );
       case 'add':
         return (
           <form onSubmit={handleSubmit} className="space-y-4 max-w-md mx-auto">
